@@ -291,7 +291,7 @@ async function bootApp() {
     console.log("My IP:", MY_IP);
 
     // 1-2. 구글 스프레드시트에서 포켓몬 세팅 가져오기
-    document.getElementById('load-msg').innerHTML = "구글 스프레드시트에서<br>포켓몬 데이터를 불러오는 중...";
+    document.getElementById('load-msg').innerHTML = "계양교회에서<br>포켓몬 데이터를 불러오는 중...";
     const sheetRes = await fetch(SCRIPT_URL);
     TRAINERS = await sheetRes.json();
 
