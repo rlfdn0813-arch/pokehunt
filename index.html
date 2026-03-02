@@ -86,6 +86,78 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 .profile-name { font-size:16px; font-weight:bold; color:#4fc3f7; }
 .profile-desc { font-size:12px; color:rgba(255,255,255,0.7); }
 #profile-close-btn { margin-top:10px; background:linear-gradient(135deg,#1e3c72,#2a5298); color:#fff; border:none; padding:12px 40px; border-radius:30px; font-size:16px; font-weight:bold; cursor:pointer; }
+/* ─── 추가/수정 시작: QR 스캔 애니메이션 및 이미지 뷰어 CSS ─── */
+
+/* 1. QR 스캔 성공 시 나타날 애니메이션 이미지 스타일 */
+.scan-success-anim {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* 모든 것 위에 위치 */
+  pointer-events: none; /* 클릭 방해 안 함 */
+}
+.scan-success-anim img {
+  width: 90%; /* 화면 너비의 90% 크기 */
+  max-width: 500px;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 20px;
+  box-shadow: 0 0 50px rgba(79,195,247,1); /* 화려한 파란색 네온 효과 */
+  
+  /* 애니메이션 설정: 팝업 -> 대기 -> 작아지며 이동 */
+  animation: popShrinkMove 2.5s ease-in-out forwards;
+}
+
+/* 애니메이션 키프레임 정의 */
+@keyframes popShrinkMove {
+  0% { transform: scale(0.5) translateY(50px); opacity: 0; } /* 0초: 작고 투명하게 아래에서 시작 */
+  15% { transform: scale(1.1) translateY(0); opacity: 1; } /* 0.375초: 약간 크게 팍! 튀어나옴 */
+  25% { transform: scale(1); opacity: 1; } /* 0.625초: 정사이즈로 대기 시작 */
+  60% { transform: scale(1) translateY(0); opacity: 1; } /* 1.5초: 정사이즈로 대기 끝 */
+  
+  /* 1.5초 ~ 2.5초: 아주 작아지며 화면 오른쪽 아래(도감 버튼 근처)로 이동 후 사라짐 */
+  100% { 
+    transform: scale(0.1) translate(150vw, 150vh); /* 화면 밖 오른쪽 아래 대각선 방향 */
+    opacity: 0; 
+  }
+}
+
+/* 2. 도감에서 이미지 클릭 시 나타날 전체 화면 뷰어 모달 스타일 */
+#image-viewer-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,5,15,.98); /* 아주 어두운 배경 */
+  z-index: 6000; /* 도감 모달(5000)보다 위에 위치 */
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#image-viewer-modal.show { display: flex; } /* 열기 클래스 */
+
+#image-viewer-modal img {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(255,255,255,.2);
+}
+
+#image-viewer-modal #viewer-close-btn {
+  margin-top: 25px;
+  background: linear-gradient(135deg,#f7971e,#ffd200); /* 화려한 주황-노랑 그라데이션 */
+  color: #0f0c29;
+  border: none;
+  padding: 12px 35px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+/* ─── 추가/수정 끝: CSS ─── */
 </style>
 </head>
 <body>
@@ -469,22 +541,57 @@ function closeQR() {
   document.getElementById('qr-modal').classList.remove('show');
 }
 
+// ══════════════════════════════════════════════════════════
+//  [수정] 📷 6. QR 스캐너 및 비디오 모달
+// ══════════════════════════════════════════════════════════
+
+// ... (openQR, closeQR 함수는 그대로 유지) ...
+
 function onQRSuccess(raw) {
   closeQR();
   const tid = raw.startsWith('pokehunt:') ? raw.slice(9) : raw.trim();
   const t = TRAINERS.find(x => x.id === tid);
-  if (!t) { alert('알 수 없는 QR 코드입니다!\n포켓몬용 QR이 맞는지 확인해주세요.'); return; }
+  if (!t) { alert('알 수 없는 QR 코드입니다!\\n포켓몬용 QR이 맞는지 확인해주세요.'); return; }
   
   caughtIds.add(t.id);
-// 도감에 추가될 때마다 로컬 스토리지에 영구 저장!
-localStorage.setItem('pokehunt_caught', JSON.stringify(Array.from(caughtIds)));
-
-document.getElementById('caught-count').textContent = caughtIds.size;
-  if (trainerMarkers[t.id]) setTrainerMarker(t); 
+  
+  // 로컬 스토리지에 영구 저장 (새로고침 시 유지용)
+  localStorage.setItem('pokehunt_caught', JSON.stringify(Array.from(caughtIds)));
+  
+  // 우측 상단 찾은 명수 뱃지 업데이트
+  document.getElementById('caught-count').textContent = caughtIds.size;
+  if (trainerMarkers[t.id]) setTrainerMarker(t); // 지도 마커 갱신
+  
+  // Firebase 데이터 전송 (저장은 유지, 파이어베이스 데이터URL에 따라 작동)
   if (isFirebase) fbSet(`/catches/${MY_UID}/${t.id}`, { name:t.name, ts:Date.now() });
   
-  showVideo(t);
+  // *** 추가/수정 시작: 스캔 성공 이미지 애니메이션 실행 ***
+  if (t.imgUrl) {
+    // 1. 애니메이션 컨테이너 및 이미지 엘리먼트 생성
+    const animContainer = document.createElement('div');
+    animContainer.className = 'scan-success-anim';
+    
+    const animImg = document.createElement('img');
+    animImg.src = t.imgUrl;
+    animImg.alt = t.name;
+    
+    animContainer.appendChild(animImg);
+    document.body.appendChild(animContainer); // 화면에 추가
+    
+    // 2. 애니메이션이 끝난 후(2.5초 후) 처리
+    setTimeout(() => {
+      document.body.removeChild(animContainer); // 애니메이션 엘리먼트 제거
+      showVideo(t); // 애니메이션이 끝나면 기존 미션 비디오 모달 띄우기
+    }, 2500); // CSS 애니메이션 시간과 맞춤 (2.5초)
+    
+  } else {
+    // 이미지가 없으면 바로 미션 비디오 모달 띄우기
+    showVideo(t);
+  }
+  // *** 추가/수정 끝 ***
 }
+
+// ... (showVideo, closeVideo 함수는 그대로 유지) ...
 
 // 기존 showVideo 함수 덮어쓰기
 function showVideo(t) {
@@ -546,10 +653,12 @@ function openProfile() {
     caughtIds.forEach(id => {
       const t = TRAINERS.find(x => x.id === id);
       if (t) {
-        // 이미지가 있으면 이미지, 없으면 이모지 출력
+        // *** 수정 시작: 이미지 태그에 onclick 이벤트 추가 ***
+        // 이미지가 있으면 이미지 태그에 openImageViewer 함수 연결
         const avatar = t.imgUrl
-          ? `<img src="${t.imgUrl}">`
+          ? `<img src="${t.imgUrl}" style="cursor:pointer;" onclick="openImageViewer('${t.imgUrl}')" title="크게 보기">`
           : `<div class="profile-item-emoji">${t.emoji}</div>`;
+        // *** 수정 끝 ***
 
         listEl.innerHTML += `
           <div class="profile-item">
@@ -565,12 +674,33 @@ function openProfile() {
   }
   document.getElementById('profile-modal').classList.add('show');
 }
+  // ══════════════════════════════════════════════════════════
+//  [추가] 🖼️ 8. 이미지 전체 화면 뷰어 기능
+// ══════════════════════════════════════════════════════════
+function openImageViewer(url) {
+  if (!url) return;
+  const modal = document.getElementById('image-viewer-modal');
+  const img = document.getElementById('viewer-img');
+  img.src = url; // 클릭한 이미지의 URL 설정
+  modal.classList.add('show'); // 뷰어 창 열기
+  
+  // 뷰어 창이 열릴 때 진동 효과 (지원하는 기기에서만)
+  if (navigator.vibrate) navigator.vibrate(50);
+}
 
-function closeProfile() {
-  document.getElementById('profile-modal').classList.remove('show');
+function closeImageViewer() {
+  const modal = document.getElementById('image-viewer-modal');
+  modal.classList.remove('show'); // 뷰어 창 닫기
+  // 닫을 때 이미지 URL 초기화 (메모리 절약 및 잔상 방지)
+  setTimeout(() => { document.getElementById('viewer-img').src = ''; }, 300);
 }
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
+  <div id="image-viewer-modal" onclick="closeImageViewer()">
+  <img id="viewer-img" src="" alt="과장님 이미지 전체화면">
+  <p style="color:white; margin-top:10px; font-size:12px;">(화면 아무 곳이나 클릭하여 닫기)</p>
+  <button id="viewer-close-btn">✕ 닫기</button>
+</div>
 </body>
 </html>
