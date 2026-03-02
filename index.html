@@ -184,7 +184,7 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 <div id="map"></div>
 
 <div class="hud-badge" id="online-badge"><span class="hud-dot"></span>접속자 <span id="user-count">1</span>명</div>
-<div class="hud-badge" id="caught-badge">🏆 <span id="caught-count">0</span> 명 찾</div>
+<div class="hud-badge" id="caught-badge">🏆 <span id="caught-count">0</span> 명 찾음</div>
 
 <div id="prox-alert">⚡ 과장님이 근처에 있습니다!</div>
 
@@ -673,6 +673,9 @@ function openProfile() {
     });
   }
   document.getElementById('profile-modal').classList.add('show');
+}
+  function closeProfile() {
+  document.getElementById('profile-modal').classList.remove('show');
 }
   // ══════════════════════════════════════════════════════════
 //  [추가] 🖼️ 8. 이미지 전체 화면 뷰어 기능
