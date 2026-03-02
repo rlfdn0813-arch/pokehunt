@@ -34,8 +34,33 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.45);font-size:10px;cursor:pointer;padding:6px 14px;border-radius:10px;transition:all .2s}
 .nav-btn.active{color:#4fc3f7;background:rgba(79,195,247,.1)}
 .nav-btn .icon{font-size:22px}
-#pokeball-center{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#ff6b6b,#c0392b 50%,#2c3e50 50%,#2c3e50 54%,#fff 54%);border:4px solid #1a1040;cursor:pointer;box-shadow:0 0 0 3px rgba(255,107,107,.4),0 4px 20px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s;margin-top:-18px;position:relative}
-#pokeball-center::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border:3px solid #333;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+/* 수정됨: 실제 입체적인 고화질 포켓볼 이미지로 변경 */
+#pokeball-center {
+  width: 72px; /* 실제 이미지라 조금 더 크게 세팅 */
+  height: 72px;
+  border-radius: 50%;
+  
+  /* 실제 입체적인 포켓볼 PNG 이미지 링크 (Postimages 활용 추천) */
+  background-image: url('https://i.postimg.cc/mD8z5KzF/pokeball-realistic.png'); 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent; /* 배경색 제거 */
+  
+  border: none; /* 기존 테두리 제거 */
+  cursor: pointer;
+  
+  /* 그림자 효과도 실제 포켓볼에 맞게 수정 */
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 8px 15px rgba(0, 0, 0, 0.7);
+  
+  transition: transform .2s, box-shadow .2s;
+  margin-top: -28px; /* 이미지가 커져서 조금 더 위로 올림 */
+  position: relative;
+  overflow: hidden; /* 이미지 잔상 방지 */
+  z-index: 1001; /* 지도 위, 다른 요소들보다 최상위에 위치 */
+}
+#pokeball-center::after {
+  content: none;
 #pokeball-center:active{transform:scale(.9) rotate(15deg);box-shadow:0 0 0 5px rgba(255,107,107,.6)}
 #prox-alert{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f7971e,#ffd200);color:#0f0c29;padding:11px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:2000;box-shadow:0 4px 20px rgba(255,210,0,.6);display:none;animation:alertBounce .4s ease;text-align:center;max-width:85vw}
 @keyframes alertBounce{from{transform:translateX(-50%) scale(.5);opacity:0}70%{transform:translateX(-50%) scale(1.07)}to{transform:translateX(-50%) scale(1);opacity:1}}
