@@ -181,7 +181,9 @@ apiKey: "AIzaSyBXSA_TzEkuQilj6uIh5ESGwaMlmpE2rI4",
 let TRAINERS = [];
 const PROX_DIST = 50; 
 let map, userMarker, userLat, userLng;
-let trainerMarkers = {}, alertedIds = new Set(), caughtIds = new Set();
+let trainerMarkers = {}, alertedIds = new Set();
+// 로컬 스토리지에서 기존 도감 기록 불러오기 (없으면 빈 상태로 시작)
+let caughtIds = new Set(JSON.parse(localStorage.getItem('pokehunt_caught') || '[]'));
 let qrScanner = null, db = null, isFirebase = false;
 let MY_IP = "";
 
@@ -209,6 +211,8 @@ async function bootApp() {
     document.getElementById('load-msg').innerHTML = "구글 스프레드시트에서<br>포켓몬 데이터를 불러오는 중...";
     const sheetRes = await fetch(SCRIPT_URL);
     TRAINERS = await sheetRes.json();
+
+    document.getElementById('caught-count').textContent = caughtIds.size;
     
     // 1-3. Firebase 및 앱 시작
     initFirebase();
@@ -472,7 +476,10 @@ function onQRSuccess(raw) {
   if (!t) { alert('알 수 없는 QR 코드입니다!\n포켓몬용 QR이 맞는지 확인해주세요.'); return; }
   
   caughtIds.add(t.id);
-  document.getElementById('caught-count').textContent = caughtIds.size;
+// 도감에 추가될 때마다 로컬 스토리지에 영구 저장!
+localStorage.setItem('pokehunt_caught', JSON.stringify(Array.from(caughtIds)));
+
+document.getElementById('caught-count').textContent = caughtIds.size;
   if (trainerMarkers[t.id]) setTrainerMarker(t); 
   if (isFirebase) fbSet(`/catches/${MY_UID}/${t.id}`, { name:t.name, ts:Date.now() });
   
