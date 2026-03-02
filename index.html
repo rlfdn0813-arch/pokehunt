@@ -244,7 +244,10 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
     <canvas id="trainer-qr-img" width="220" height="220"></canvas>
   </div>
   <div id="trainer-status">📍 위치 업데이트 중…</div>
-</div>
+  
+  <button id="toggle-broadcast-btn" onclick="toggleBroadcast()" style="margin-top:25px; padding:14px 28px; border-radius:30px; border:none; background:#ff4444; color:white; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 4px 12px rgba(255,68,68,0.4);">⏹ 위치 송출 끄기 (퇴근용)</button>
+  <p style="color:rgba(255,255,255,0.5); font-size:11px; margin-top:10px;">퇴근하실 때는 꼭 위 버튼을 눌러주세요!</p>
+  </div>
 
 <div id="profile-modal">
   <div id="profile-header">나의 도감 (찾은 과장님)</div>
@@ -345,18 +348,8 @@ function startModeSelection() {
     drawQR(document.getElementById('trainer-qr-img'), 'pokehunt:' + matchedTrainer.id);
 
     // 내 위치를 계속 파이어베이스로 송출
-    navigator.geolocation.watchPosition(
-      p => {
-        const lat = p.coords.latitude;
-        const lng = p.coords.longitude;
-        if(isFirebase) {
-          fbSet(`/trainers/${matchedTrainer.id}/loc`, { lat, lng, ts: Date.now() });
-          document.getElementById('trainer-status').textContent = `📍 위치 실시간 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-        }
-      },
-      err => { document.getElementById('trainer-status').textContent = '⚠️ 위치 권한을 허용해주세요!'; }, 
-      { enableHighAccuracy:true, maximumAge:0 }
-    );
+    currentTrainerId = matchedTrainer.id; // 아이디 기억해두기
+    startBroadcasting();
     
     hideLoading();
     return;
@@ -706,7 +699,68 @@ function closeImageViewer() {
   modal.classList.remove('show'); 
   setTimeout(() => { document.getElementById('viewer-img').src = ''; }, 300);
 }
+// ══════════════════════════════════════════════════════════
+//  [추가] 🛑 9. 과장님 위치 송출 제어 (출퇴근 기능)
+// ══════════════════════════════════════════════════════════
+let watchId = null;
+let isBroadcasting = false;
+let currentTrainerId = null;
 
+function startBroadcasting() {
+  isBroadcasting = true;
+  const btn = document.getElementById('toggle-broadcast-btn');
+  if(btn) {
+    btn.textContent = '⏹ 위치 송출 끄기 (퇴근용)';
+    btn.style.background = '#ff4444';
+    btn.style.boxShadow = '0 4px 12px rgba(255,68,68,0.4)';
+  }
+
+  watchId = navigator.geolocation.watchPosition(
+    p => {
+      const lat = p.coords.latitude;
+      const lng = p.coords.longitude;
+      if(isFirebase && currentTrainerId) {
+        fbSet(`/trainers/${currentTrainerId}/loc`, { lat, lng, ts: Date.now() });
+        document.getElementById('trainer-status').textContent = `📍 위치 실시간 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      }
+    },
+    err => { document.getElementById('trainer-status').textContent = '⚠️ 위치 권한을 허용해주세요!'; }, 
+    { enableHighAccuracy:true, maximumAge:0 }
+  );
+}
+
+function stopBroadcasting() {
+  isBroadcasting = false;
+  
+  // 1. 스마트폰 GPS 추적 멈춤
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  
+  // 2. 파이어베이스 서버에서 내 위치 데이터 즉시 삭제 (지도에서 마커 증발)
+  if (isFirebase && currentTrainerId) {
+    fbSet(`/trainers/${currentTrainerId}/loc`, null);
+  }
+  
+  // 3. 화면 UI 변경
+  document.getElementById('trainer-status').textContent = '⏸ 현재 위치 송출이 중단되었습니다.';
+  const btn = document.getElementById('toggle-broadcast-btn');
+  if(btn) {
+    btn.textContent = '▶️ 위치 송출 켜기 (출근용)';
+    btn.style.background = '#4caf50'; // 초록색으로 변경
+    btn.style.boxShadow = '0 4px 12px rgba(76,175,80,0.4)';
+  }
+}
+
+function toggleBroadcast() {
+  if (isBroadcasting) {
+    stopBroadcasting(); // 켜져있으면 끄기
+  } else {
+    startBroadcasting(); // 꺼져있으면 켜기
+  }
+}
+  
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
