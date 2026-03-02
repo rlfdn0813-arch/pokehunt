@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PokéHunt</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<style>
+/* 기존 UI 스타일 완벽 유지 */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-select:none}
+#loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
+.pokeball-spin{width:70px;height:70px;border-radius:50%;background:linear-gradient(#ff4444 50%,#fff 50%);border:5px solid #333;animation:spin 1s linear infinite;position:relative;margin:24px 0}
+.pokeball-spin::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border:5px solid #333;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+#load-title{color:#ffd200;font-size:38px;font-weight:900;text-shadow:0 0 30px rgba(255,210,0,.8);letter-spacing:2px}
+#load-sub{color:rgba(255,255,255,.5);font-size:14px;margin-top:6px}
+#load-msg{color:rgba(255,255,255,.4);font-size:12px;margin-top:16px; text-align:center; padding: 0 20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#header{position:fixed;top:0;left:0;right:0;height:58px;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+#app-title{color:#fff;font-size:19px;font-weight:800;text-shadow:0 0 12px #4fc3f7;letter-spacing:1px}
+#qr-btn{width:42px;height:42px;background:linear-gradient(135deg,#f7971e,#ffd200);border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(255,210,0,.5);transition:transform .15s}
+#qr-btn:active{transform:scale(.93)}
+#map{position:fixed;top:58px;left:0;right:0;bottom:78px;z-index:1}
+.hud-badge{position:fixed;background:rgba(10,20,50,.88);border:1px solid rgba(79,195,247,.4);border-radius:20px;padding:5px 12px;color:#4fc3f7;font-size:12px;z-index:500;backdrop-filter:blur(8px)}
+#online-badge{top:68px;left:10px}
+#caught-badge{top:68px;right:10px}
+.hud-dot{display:inline-block;width:7px;height:7px;background:#4caf50;border-radius:50%;margin-right:4px;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:78px;background:linear-gradient(180deg,#0f0c29,#1a1040);display:flex;align-items:center;justify-content:space-around;padding:0 20px;z-index:1000;border-top:1px solid rgba(79,195,247,.2)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.45);font-size:10px;cursor:pointer;padding:6px 14px;border-radius:10px;transition:all .2s}
+.nav-btn.active{color:#4fc3f7;background:rgba(79,195,247,.1)}
+.nav-btn .icon{font-size:22px}
+#pokeball-center{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#ff6b6b,#c0392b 50%,#2c3e50 50%,#2c3e50 54%,#fff 54%);border:4px solid #1a1040;cursor:pointer;box-shadow:0 0 0 3px rgba(255,107,107,.4),0 4px 20px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s;margin-top:-18px;position:relative}
+#pokeball-center::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border:3px solid #333;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+#pokeball-center:active{transform:scale(.9) rotate(15deg);box-shadow:0 0 0 5px rgba(255,107,107,.6)}
+#prox-alert{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f7971e,#ffd200);color:#0f0c29;padding:11px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:2000;box-shadow:0 4px 20px rgba(255,210,0,.6);display:none;animation:alertBounce .4s ease;text-align:center;max-width:85vw}
+@keyframes alertBounce{from{transform:translateX(-50%) scale(.5);opacity:0}70%{transform:translateX(-50%) scale(1.07)}to{transform:translateX(-50%) scale(1);opacity:1}}
+#qr-modal{position:fixed;inset:0;background:rgba(5,5,15,.97);z-index:3000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#qr-modal.show{display:flex}
+#qr-modal h2{color:#4fc3f7;font-size:17px;margin-bottom:18px;text-align:center}
+#qr-reader{width:min(300px,85vw);border-radius:16px;overflow:hidden;border:2px solid #4fc3f7;box-shadow:0 0 30px rgba(79,195,247,.3); background:#000;}
+#qr-status{color:rgba(255,255,255,.55);font-size:12px;margin-top:14px;text-align:center;max-width:260px}
+#qr-close-btn{margin-top:22px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;border:none;padding:12px 36px;border-radius:30px;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.qr-scan-line{width:min(250px,80vw);height:2px;background:linear-gradient(90deg,transparent,#4fc3f7,transparent);margin-top:-2px;animation:scanLine 2s linear infinite;position:relative;z-index:1}
+@keyframes scanLine{0%{margin-top:0}100%{margin-top:250px;opacity:0}}
+#video-modal{position:fixed;inset:0;background:rgba(5,5,15,.98);z-index:4000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+#video-modal.show{display:flex}
+#video-header{color:#ffd200;font-size:15px;font-weight:800;margin-bottom:14px;text-align:center;text-shadow:0 0 12px rgba(255,210,0,.6);letter-spacing:1px}
+#video-player{width:100%;max-width:400px;border-radius:12px;border:2px solid rgba(255,210,0,.6);background:#000;max-height:55vh}
+#trainer-info-card{display:flex;align-items:center;gap:12px;margin-top:14px;background:rgba(255,210,0,.07);border:1px solid rgba(255,210,0,.25);border-radius:12px;padding:12px 16px;width:100%;max-width:400px}
+#card-emoji{font-size:36px;line-height:1; width:45px; height:45px; display:flex; align-items:center; justify-content:center;}
+#card-name{color:#fff;font-size:15px;font-weight:700}
+#card-desc{color:rgba(255,255,255,.5);font-size:11px;margin-top:3px}
+#video-close-btn{margin-top:18px;background:linear-gradient(135deg,#f7971e,#ffd200);color:#0f0c29;border:none;padding:14px 44px;border-radius:30px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,210,0,.4)}
+#trainer-mode{position:fixed;inset:0;background:linear-gradient(135deg,#0f0c29,#302b63);z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px}
+#trainer-mode.show{display:flex}
+#trainer-mode h2{color:#ffd200;font-size:20px;font-weight:800;margin-bottom:6px;text-shadow:0 0 12px rgba(255,210,0,.6)}
+#trainer-mode p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;text-align:center}
+#trainer-qr-box{background:#fff;border-radius:16px;padding:16px;box-shadow:0 0 30px rgba(79,195,247,.4)}
+#trainer-qr-img{width:220px;height:220px}
+#trainer-status{margin-top:20px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:12px;padding:12px 20px;color:#4fc3f7;font-size:13px;text-align:center}
+#trainer-name-display{color:#fff;font-size:22px;font-weight:700;margin-bottom:14px; display:flex; align-items:center; gap:10px;}
+.leaflet-container{background:#1a2035!important}
+.leaflet-tile{filter:brightness(.85) saturate(1.2) hue-rotate(10deg)}
+.t-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.t-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1e3c72,#2a5298);border:2.5px solid #4fc3f7;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 0 0 rgba(79,195,247,.7);animation:pulse 2.5s infinite; overflow:hidden;}
+.t-avatar img {width: 100%; height: 100%; object-fit: cover;}
+.t-avatar.caught{border-color:#4caf50;background:linear-gradient(135deg,#1b5e20,#2e7d32)}
+.t-label{background:rgba(10,20,50,.88);color:#4fc3f7;font-size:10px;padding:2px 7px;border-radius:10px;margin-top:3px;white-space:nowrap;border:1px solid rgba(79,195,247,.3)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,195,247,.7)}70%{box-shadow:0 0 0 14px rgba(79,195,247,0)}100%{box-shadow:0 0 0 0 rgba(79,195,247,0)}}
+.user-dot{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,#64b5f6,#1565c0);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 0 0 rgba(100,181,246,.6);animation:userPulse 2s infinite}
+@keyframes userPulse{0%{box-shadow:0 0 0 0 rgba(100,181,246,.6)}70%{box-shadow:0 0 0 22px rgba(100,181,246,0)}100%{box-shadow:0 0 0 0 rgba(100,181,246,0)}}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div id="load-title">⚡ PokéHunt</div>
+  <div id="load-sub">트레이너를 찾아라!</div>
+  <div class="pokeball-spin"></div>
+  <div id="load-msg">서버에서 포켓몬 데이터를 불러오는 중...<br>잠시만 기다려주세요!</div>
+</div>
+
+<div id="header">
+  <div id="app-title">⚡ PokéHunt</div>
+  <button id="qr-btn" onclick="openQR()" title="QR 스캔">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+      <rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/>
+      <rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/>
+    </svg>
+  </button>
+</div>
+
+<div id="map"></div>
+
+<div class="hud-badge" id="online-badge"><span class="hud-dot"></span>접속자 <span id="user-count">1</span>명</div>
+<div class="hud-badge" id="caught-badge">🏆 <span id="caught-count">0</span> 마리 발견</div>
+
+<div id="prox-alert">⚡ 트레이너가 근처에 있습니다!</div>
+
+<div id="bottom-bar">
+  <div class="nav-btn active"><div class="icon">🗺️</div>지도</div>
+  <div id="pokeball-center" onclick="openQR()"></div>
+  <div class="nav-btn"><div class="icon">👤</div>프로필</div>
+</div>
+
+<div id="qr-modal">
+  <h2>📷 QR 코드 스캔</h2>
+  <div id="qr-reader"></div>
+  <div class="qr-scan-line"></div>
+  <p id="qr-status">포켓몬(트레이너)의 QR 코드를 화면에 비춰주세요</p>
+  <button id="qr-close-btn" onclick="closeQR()">✕ 닫기</button>
+</div>
+
+<div id="video-modal">
+  <div id="video-header">🏆 포켓몬 발견!</div>
+  <video id="video-player" controls autoplay playsinline></video>
+  <div id="trainer-info-card">
+    <div id="card-emoji">❓</div>
+    <div>
+      <div id="card-name">트레이너</div>
+      <div id="card-desc">특별한 메시지</div>
+    </div>
+  </div>
+  <button id="video-close-btn" onclick="closeVideo()">✓ 확인</button>
+</div>
+
+<div id="trainer-mode">
+  <div id="trainer-name-display">트레이너</div>
+  <p>사냥꾼(참가자)들에게 이 QR 코드를 보여주세요!</p>
+  <div id="trainer-qr-box">
+    <canvas id="trainer-qr-img" width="220" height="220"></canvas>
+  </div>
+  <div id="trainer-status">📍 위치 업데이트 중…</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  ⚙️  설정 (아래 두 개의 값을 본인의 것으로 반드시 변경하세요!)
+// ══════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPs8B0vQ1_aE9_N_1zoppXss0pWUzeTT-TuH-njPQg8ObMj6Rke6j2_0eDOuL6nJvI/exec"; 
+
+const FB_CONFIG = {
+apiKey: "AIzaSyBXSA_TzEkuQilj6uIh5ESGwaMlmpE2rI4",
+  authDomain: "pokehunt-da16f.firebaseapp.com",
+  databaseURL: "https://pokehunt-da16f-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "pokehunt-da16f",
+  storageBucket: "pokehunt-da16f.firebasestorage.app",
+  messagingSenderId: "525250200389",
+  appId: "1:525250200389:web:4c0c0ca2adeeb8ec0fb42c"
+};
+
+// ══════════════════════════════════════════════════════════
+//  상태 변수들
+// ══════════════════════════════════════════════════════════
+let TRAINERS = [];
+const PROX_DIST = 50; 
+let map, userMarker, userLat, userLng;
+let trainerMarkers = {}, alertedIds = new Set(), caughtIds = new Set();
+let qrScanner = null, db = null, isFirebase = false;
+let MY_IP = "";
+
+const MY_UID = (() => {
+  if (!localStorage.pokehunt_uid) localStorage.pokehunt_uid = 'u_' + Math.random().toString(36).slice(2,10);
+  return localStorage.pokehunt_uid;
+})();
+
+const urlParams = new URLSearchParams(location.search);
+const URL_TRAINER_MODE = urlParams.get('trainer'); 
+
+// ══════════════════════════════════════════════════════════
+//  🚀 1. 앱 부팅 & 데이터 로드
+// ══════════════════════════════════════════════════════════
+async function bootApp() {
+  try {
+    // 1-1. 내 기기 IP 가져오기
+    document.getElementById('load-msg').innerHTML = "네트워크 상태 확인 중...<br>(Wi-Fi나 데이터를 켜주세요)";
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    MY_IP = ipData.ip;
+    console.log("My IP:", MY_IP);
+
+    // 1-2. 구글 스프레드시트에서 포켓몬 세팅 가져오기
+    document.getElementById('load-msg').innerHTML = "구글 스프레드시트에서<br>포켓몬 데이터를 불러오는 중...";
+    const sheetRes = await fetch(SCRIPT_URL);
+    TRAINERS = await sheetRes.json();
+    
+    // 1-3. Firebase 및 앱 시작
+    initFirebase();
+    startModeSelection();
+
+  } catch (error) {
+    console.error("초기화 에러:", error);
+    document.getElementById('load-msg').innerHTML = "⚠️ 데이터를 불러오지 못했습니다.<br>새로고침을 눌러주세요.";
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  🎮 2. 모드 선택 (포켓몬 역할을 할지 vs 참가자 역할을 할지)
+// ══════════════════════════════════════════════════════════
+function startModeSelection() {
+  // IP 매칭 확인 (안 되면 URL 파라미터 ?trainer=id 로 강제 지정 가능)
+  const matchedTrainer = TRAINERS.find(t => t.targetIp === MY_IP) || TRAINERS.find(t => t.id === URL_TRAINER_MODE);
+
+  // ── 포켓몬(트레이너) 모드 ──
+  if (matchedTrainer) {
+    document.getElementById('trainer-mode').classList.add('show');
+    
+    // 이미지가 있으면 이미지 출력, 없으면 이모지 출력
+    const avatarHtml = matchedTrainer.imgUrl 
+      ? `<img src="${matchedTrainer.imgUrl}" style="width:45px; height:45px; border-radius:50%; object-fit:cover;">`
+      : `<span>${matchedTrainer.emoji}</span>`;
+      
+    document.getElementById('trainer-name-display').innerHTML = `${avatarHtml} <span>${matchedTrainer.name}</span>`;
+    
+    // QR 코드 생성
+    drawQR(document.getElementById('trainer-qr-img'), 'pokehunt:' + matchedTrainer.id);
+
+    // 내 위치를 계속 파이어베이스로 송출
+    navigator.geolocation.watchPosition(
+      p => {
+        const lat = p.coords.latitude;
+        const lng = p.coords.longitude;
+        if(isFirebase) {
+          fbSet(`/trainers/${matchedTrainer.id}/loc`, { lat, lng, ts: Date.now() });
+          document.getElementById('trainer-status').textContent = `📍 위치 실시간 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        }
+      },
+      err => { document.getElementById('trainer-status').textContent = '⚠️ 위치 권한을 허용해주세요!'; }, 
+      { enableHighAccuracy:true, maximumAge:0 }
+    );
+    
+    hideLoading();
+    return;
+  }
+
+  // ── 일반 참가자(사냥꾼) 모드 ──
+  if (!('geolocation' in navigator)) {
+    document.getElementById('load-msg').textContent = '위치 서비스를 지원하지 않는 브라우저입니다.';
+    return;
+  }
+
+  document.getElementById('load-msg').textContent = '현재 위치를 찾는 중...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude; 
+      userLng = pos.coords.longitude;
+      initMap(userLat, userLng);
+
+      if (isFirebase) {
+        listenTrainers();
+        listenOnline();
+      } else {
+        demoMode(userLat, userLng);
+      }
+      watchLocation();
+      hideLoading();
+    },
+    err => {
+      // 위치 거부 시 인천을 기본값으로 (에러 방지용)
+      userLat=37.4563; userLng=126.7052;
+      initMap(userLat, userLng);
+      if (isFirebase) { listenTrainers(); listenOnline(); }
+      hideLoading();
+    },
+    { enableHighAccuracy:true, timeout:12000 }
+  );
+}
+
+function hideLoading() {
+  const ls = document.getElementById('loading-screen');
+  ls.style.opacity = '0';
+  setTimeout(() => ls.style.display = 'none', 600);
+}
+
+// ══════════════════════════════════════════════════════════
+//  🔥 3. Firebase 및 기본 유틸리티 함수
+// ══════════════════════════════════════════════════════════
+function initFirebase() {
+  try {
+    if (FB_CONFIG.apiKey === 'YOUR_API_KEY') throw new Error('설정 안 됨');
+    firebase.initializeApp(FB_CONFIG);
+    db = firebase.database();
+    isFirebase = true;
+    console.log('[Firebase] connected');
+  } catch(e) {
+    console.warn('[Firebase] demo mode 작동:', e.message);
+  }
+}
+function fbSet(path, val) { if (db) db.ref(path).set(val); }
+function fbOn(path, cb)   { if (db) db.ref(path).on('value', s => cb(s.val())); }
+
+function drawQR(canvas, text) {
+  try {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => {
+      document.getElementById('trainer-qr-box').innerHTML = '';
+      const div = document.createElement('div');
+      div.style.cssText = 'width:220px;height:220px';
+      document.getElementById('trainer-qr-box').appendChild(div);
+      new QRCode(div, { text, width:220, height:220, colorDark:'#000', colorLight:'#fff' });
+    };
+    document.head.appendChild(script);
+  } catch(e) { /* fallback canvas code */ }
+}
+
+function calcDist(la1,lo1,la2,lo2) {
+  const R=6371000, r=Math.PI/180;
+  const a=Math.sin((la2-la1)*r/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ══════════════════════════════════════════════════════════
+//  🗺️ 4. 지도 및 마커 처리
+// ══════════════════════════════════════════════════════════
+function initMap(lat, lng) {
+  map = L.map('map', { zoomControl:false, attributionControl:false }).setView([lat,lng], 17);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+
+  userMarker = L.marker([lat,lng], {
+    icon: L.divIcon({ html: `<div class="user-dot">🧑</div>`, className:'', iconSize:[46,46], iconAnchor:[23,23] })
+  }).addTo(map);
+
+  L.circle([lat,lng], { radius:PROX_DIST, color:'#4fc3f7', fillColor:'#4fc3f7', fillOpacity:.06, weight:1, dashArray:'5,5' }).addTo(map);
+}
+
+function setTrainerMarker(t) {
+  if (!t.lat || !t.lng || !map) return;
+  const caught = caughtIds.has(t.id);
+  
+  // 스프레드시트에 imgUrl이 있으면 이미지 태그 생성, 없으면 emoji 출력
+  let avatarContent = caught ? '✅' : (t.imgUrl ? `<img src="${t.imgUrl}">` : t.emoji);
+  
+  const html = `<div class="t-marker">
+    <div class="t-avatar${caught?' caught':''}">${avatarContent}</div>
+    <div class="t-label">${t.name}</div>
+  </div>`;
+  const icon = L.divIcon({ html, className:'', iconSize:[70,60], iconAnchor:[35,55] });
+  
+  if (trainerMarkers[t.id]) {
+    trainerMarkers[t.id].setLatLng([t.lat,t.lng]).setIcon(icon);
+  } else {
+    trainerMarkers[t.id] = L.marker([t.lat,t.lng], {icon}).addTo(map).on('click', () => showTrainerPopup(t));
+  }
+}
+
+function showTrainerPopup(t) {
+  const dist = userLat ? Math.round(calcDist(userLat,userLng,t.lat,t.lng)) : '?';
+  const caught = caughtIds.has(t.id);
+  const avatarDisplay = t.imgUrl 
+    ? `<img src="${t.imgUrl}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; margin-bottom:8px;">`
+    : `<div style="font-size:34px">${t.emoji}</div>`;
+
+  L.popup().setLatLng([t.lat,t.lng]).setContent(`
+    <div style="text-align:center;padding:8px;min-width:150px;font-family:sans-serif">
+      ${avatarDisplay}
+      <div style="font-weight:700;margin:6px 0">${t.name}</div>
+      <div style="color:#666;font-size:11px">${t.desc || '설명 없음'}</div>
+      <div style="margin-top:8px;font-size:12px">📍 약 ${dist}m 거리</div>
+      ${caught ? '<div style="color:#2e7d32;font-weight:700;margin-top:6px">✅ 잡았다!</div>' : '<div style="color:#e65100;font-size:11px;margin-top:6px">📷 QR 스캔으로 잡으세요!</div>'}
+    </div>`).openOn(map);
+}
+
+// ══════════════════════════════════════════════════════════
+//  📍 5. 위치 추적 & 실시간 동기화
+// ══════════════════════════════════════════════════════════
+function onLocation(lat, lng) {
+  userLat = lat; userLng = lng;
+  if (userMarker) userMarker.setLatLng([lat,lng]);
+  checkProximity();
+}
+
+function watchLocation() {
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.watchPosition(
+    p => onLocation(p.coords.latitude, p.coords.longitude),
+    null, { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+  );
+}
+
+function listenTrainers() {
+  if (!isFirebase) return;
+  fbOn('/trainers', data => {
+    if (!data) return;
+    TRAINERS.forEach(t => {
+      if (data[t.id]?.loc) {
+        t.lat = data[t.id].loc.lat;
+        t.lng = data[t.id].loc.lng;
+        setTrainerMarker(t);
+        if (userLat) checkProximity();
+      }
+    });
+  });
+}
+
+function listenOnline() {
+  if (!isFirebase) return;
+  const myRef = db.ref('/online/'+MY_UID);
+  myRef.set({ ts: Date.now() });
+  myRef.onDisconnect().remove();
+  fbOn('/online', d => { document.getElementById('user-count').textContent = d ? Object.keys(d).length : 1; });
+}
+
+function checkProximity() {
+  if (!userLat) return;
+  TRAINERS.forEach(t => {
+    if (!t.lat || caughtIds.has(t.id)) return;
+    const d = calcDist(userLat,userLng,t.lat,t.lng);
+    if (d < PROX_DIST && !alertedIds.has(t.id)) {
+      alertedIds.add(t.id);
+      showProxAlert(t, d);
+    } else if (d > PROX_DIST * 2) {
+      alertedIds.delete(t.id);
+    }
+  });
+}
+
+function showProxAlert(t, dist) {
+  const el = document.getElementById('prox-alert');
+  el.innerHTML = `<strong>${t.name}</strong>이(가) 근처에 있습니다!<br>
+    <small>약 ${Math.round(dist)}m · 숨어있는 QR 코드를 스캔하세요 📷</small>`;
+  el.style.display = 'block';
+  if (navigator.vibrate) navigator.vibrate([200,100,200]);
+  setTimeout(() => el.style.display='none', 5500);
+}
+
+// ══════════════════════════════════════════════════════════
+//  📷 6. QR 스캐너 및 비디오 모달
+// ══════════════════════════════════════════════════════════
+function openQR() {
+  document.getElementById('qr-modal').classList.add('show');
+  qrScanner = new Html5Qrcode('qr-reader');
+  qrScanner.start({ facingMode:'environment' }, { fps:10, qrbox:{ width:240, height:240 } }, onQRSuccess, () => {}
+  ).catch(() => { document.getElementById('qr-status').textContent = '⚠️ 카메라 권한이 필요합니다.'; });
+}
+
+function closeQR() {
+  if (qrScanner) qrScanner.stop().catch(()=>{}).finally(()=>{ qrScanner=null; });
+  document.getElementById('qr-modal').classList.remove('show');
+}
+
+function onQRSuccess(raw) {
+  closeQR();
+  const tid = raw.startsWith('pokehunt:') ? raw.slice(9) : raw.trim();
+  const t = TRAINERS.find(x => x.id === tid);
+  if (!t) { alert('알 수 없는 QR 코드입니다!\n포켓몬용 QR이 맞는지 확인해주세요.'); return; }
+  
+  caughtIds.add(t.id);
+  document.getElementById('caught-count').textContent = caughtIds.size;
+  if (trainerMarkers[t.id]) setTrainerMarker(t); 
+  if (isFirebase) fbSet(`/catches/${MY_UID}/${t.id}`, { name:t.name, ts:Date.now() });
+  
+  showVideo(t);
+}
+
+function showVideo(t) {
+  // 모달창에 이미지 or 이모지 적용
+  if (t.imgUrl) {
+    document.getElementById('card-emoji').innerHTML = `<img src="${t.imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+  } else {
+    document.getElementById('card-emoji').textContent = t.emoji;
+  }
+  
+  document.getElementById('card-name').textContent = t.name;
+  document.getElementById('card-desc').textContent = t.desc || '축하합니다!';
+  
+  if(t.video) {
+    document.getElementById('video-player').src = t.video;
+    document.getElementById('video-player').style.display = 'block';
+  } else {
+    document.getElementById('video-player').style.display = 'none';
+  }
+  document.getElementById('video-modal').classList.add('show');
+}
+
+function closeVideo() {
+  const v = document.getElementById('video-player');
+  v.pause(); v.src='';
+  document.getElementById('video-modal').classList.remove('show');
+}
+
+// 데모 모드 (Firebase 연결 실패 시 작동)
+function demoMode(baseLat, baseLng) {
+  TRAINERS.forEach((t,i) => {
+    const ang = (i/10)*Math.PI*2;
+    const r = 0.0008 + Math.random()*0.0025;
+    t.lat = baseLat + Math.cos(ang)*r; t.lng = baseLng + Math.sin(ang)*r;
+    setTrainerMarker(t);
+  });
+  setInterval(() => {
+    document.getElementById('user-count').textContent = 40 + Math.floor(Math.random()*60);
+    TRAINERS.forEach(t => { t.lat += (Math.random()-.5)*0.00003; t.lng += (Math.random()-.5)*0.00003; setTrainerMarker(t); });
+    checkProximity();
+  }, 4000);
+}
+
+// 🚀 앱 시작
+document.addEventListener('DOMContentLoaded', bootApp);
+</script>
+</body>
+</html>
