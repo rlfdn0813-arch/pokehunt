@@ -35,15 +35,19 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 .nav-btn.active{color:#4fc3f7;background:rgba(79,195,247,.1)}
 .nav-btn .icon{font-size:22px}
 /* 수정됨: 실제 입체적인 고화질 포켓볼 이미지로 변경 */
+/* 수정됨: 절대 지워지지 않는 위키백과 공식 고화질 포켓볼 이미지로 변경 */
 #pokeball-center {
   width: 72px; 
   height: 72px;
   border-radius: 50%;
-  background-image: url('https://i.postimg.cc/mD8z5KzF/pokeball-realistic.png'); 
+  
+  /* 영구적인 SVG 이미지 링크 적용 */
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/5/53/Pok%C3%A9_Ball_icon.svg'); 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent; 
+  
   border: none; 
   cursor: pointer;
   box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 8px 15px rgba(0, 0, 0, 0.7);
