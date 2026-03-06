@@ -180,6 +180,26 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
   font-weight: 800;
   cursor: pointer;
 }
+  /* ─── 이스터에그: 포켓몬 수동 선택 모달 ─── */
+#trainer-select-modal {
+  position: fixed; inset: 0; background: rgba(15,12,41,0.95); z-index: 9000;
+  display: none; flex-direction: column; align-items: center; padding: 40px 20px;
+}
+#trainer-select-modal.show { display: flex; }
+#trainer-select-header { color: #f7971e; font-size: 22px; font-weight: 800; margin-bottom: 20px; text-shadow: 0 0 12px rgba(247,151,30,.6); }
+#trainer-select-list {
+  width: 100%; max-width: 400px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;
+}
+.trainer-select-item {
+  display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); border: 1px solid #f7971e; border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s;
+}
+.trainer-select-item:active { background: rgba(255,255,255,0.3); }
+.trainer-select-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd200; }
+.trainer-select-item-emoji { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; background: rgba(255,255,255,0.2); border: 2px solid #ffd200; }
+.trainer-select-info { color: #fff; display: flex; flex-direction: column; gap: 4px; }
+.trainer-select-name { font-size: 16px; font-weight: bold; color: #ffd200; }
+#trainer-select-close-btn { margin-top: 10px; background: linear-gradient(135deg,#1e3c72,#2a5298); color: #fff; border: none; padding: 12px 40px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.reset-trainer-btn { background: #ff4444; color: white; border: none; padding: 12px; border-radius: 12px; margin-top: 10px; cursor: pointer; font-weight: bold; width: 100%; max-width: 400px; font-size: 14px; box-shadow: 0 4px 12px rgba(255,68,68,0.4); }
 </style>
 </head>
 <body>
@@ -330,13 +350,13 @@ async function bootApp() {
 //  🎮 2. 모드 선택 (포켓몬 역할을 할지 vs 참가자 역할을 할지)
 // ══════════════════════════════════════════════════════════
 function startModeSelection() {
-  // 로컬 스토리지에 저장된 보스몬 자격 확인
-  const savedBossId = localStorage.getItem('pokehunt_boss');
+  // 로컬 스토리지에 수동으로 선택한 포켓몬 아이디가 있는지 확인
+  const savedTrainerId = localStorage.getItem('pokehunt_manual_trainer');
   
-  // IP 매칭 확인 -> URL 파라미터 확인 -> 이스터에그 보스 확인 순으로 검사
+  // IP 매칭 -> URL 파라미터 -> 수동 선택(이스터에그) 순으로 검사
   const matchedTrainer = TRAINERS.find(t => t.targetIp === MY_IP) 
                       || TRAINERS.find(t => t.id === URL_TRAINER_MODE)
-                      || (savedBossId ? TRAINERS.find(t => t.id === savedBossId) : null);
+                      || (savedTrainerId ? TRAINERS.find(t => t.id === savedTrainerId) : null);
 
   // ── 포켓몬(트레이너) 모드 ──
   if (matchedTrainer) {
@@ -765,8 +785,8 @@ function toggleBroadcast() {
     startBroadcasting(); // 꺼져있으면 켜기
   }
 }
-  // ══════════════════════════════════════════════════════════
-//  🎁 10. 이스터에그 (보스몬 n7 변신 치트키)
+// ══════════════════════════════════════════════════════════
+//  🎁 10. 이스터에그 (포켓몬 수동 선택 치트키)
 // ══════════════════════════════════════════════════════════
 let eggClickCount = 0;
 let eggTimer = null;
@@ -774,31 +794,76 @@ let eggTimer = null;
 function triggerEasterEgg() {
   eggClickCount++;
   
-  // 터치하고 2초 동안 다음 터치가 없으면 카운트 초기화 (연속으로 다다닥 눌러야 함)
   if (eggTimer) clearTimeout(eggTimer);
-  eggTimer = setTimeout(() => { eggClickCount = 0; }, 2000);
+  eggTimer = setTimeout(() => { eggClickCount = 0; }, 2000); // 2초 내에 안 누르면 초기화
 
-  // 5번 연속 터치 성공 시!
+  // 5번 연속 터치 성공 시 비밀 메뉴 팝업 열기
   if (eggClickCount >= 5) {
-    eggClickCount = 0; // 카운트 초기화
-    
-    // 스프레드시트에서 n7 데이터를 찾아옴
-    const boss = TRAINERS.find(t => t.id === 'n7');
-    
-    if (boss) {
-      alert('🎉 히든 이스터에그 발동!\n[' + boss.name + '] 모드로 접속합니다!');
-      // 이 기기에 보스몬(n7) 자격을 영구 저장
-      localStorage.setItem('pokehunt_boss', 'n7');
-      // 화면을 새로고침하여 완벽하게 보스몬으로 변신!
-      location.reload(); 
-    } else {
-      alert('⚠️ 스프레드시트에서 id가 "n7"인 보스몬 데이터를 찾을 수 없습니다.');
+    eggClickCount = 0;
+    openTrainerSelectModal();
+  }
+}
+
+function openTrainerSelectModal() {
+  const listEl = document.getElementById('trainer-select-list');
+  listEl.innerHTML = ''; 
+
+  // 스프레드시트에서 불러온 포켓몬 목록 전체를 리스트로 만들기
+  TRAINERS.forEach(t => {
+    const avatar = t.imgUrl
+      ? `<img src="${t.imgUrl}">`
+      : `<div class="trainer-select-item-emoji">${t.emoji}</div>`;
+
+    listEl.innerHTML += `
+      <div class="trainer-select-item" onclick="selectManualTrainer('${t.id}', '${t.name}')">
+        ${avatar}
+        <div class="trainer-select-info">
+          <div class="trainer-select-name">${t.name}</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.6);">ID: ${t.id}</div>
+        </div>
+      </div>
+    `;
+  });
+  
+  document.getElementById('trainer-select-modal').classList.add('show');
+}
+
+function closeTrainerSelectModal() {
+  document.getElementById('trainer-select-modal').classList.remove('show');
+}
+
+// 목록에서 포켓몬을 선택했을 때
+function selectManualTrainer(id, name) {
+  if(confirm(`이 기기를 [${name}] 포켓몬으로 설정하시겠습니까?\n(위치 송출 모드로 변환됩니다.)`)) {
+    localStorage.setItem('pokehunt_manual_trainer', id); // 내장 메모리에 영구 저장
+    location.reload(); // 새로고침해서 포켓몬 모드로 접속
+  }
+}
+
+// 수동 설정을 해제하고 싶을 때 (빨간색 초기화 버튼)
+function clearManualTrainer() {
+  if(localStorage.getItem('pokehunt_manual_trainer')) {
+    if(confirm('포켓몬 모드를 해제하고 일반 사냥꾼(참가자)으로 돌아가시겠습니까?')) {
+      localStorage.removeItem('pokehunt_manual_trainer'); // 저장된 자격 삭제
+      location.reload(); // 새로고침해서 일반 모드로 접속
     }
+  } else {
+    alert('현재 기기에 강제로 할당된 포켓몬이 없습니다.');
   }
 }
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
+<div id="header">
+  <div id="app-title" onclick="triggerEasterEgg()">⚡ 과장몬 GO</div>
+  <button id="qr-btn" onclick="openQR()" title="QR 스캔"> ... </button>
+</div>
 
+<div id="trainer-select-modal">
+  <div id="trainer-select-header">비밀 메뉴: 포켓몬 할당</div>
+  <div id="trainer-select-list"></div>
+  <button class="reset-trainer-btn" onclick="clearManualTrainer()">🔄 일반 참가자로 돌아가기 (초기화)</button>
+  <button id="trainer-select-close-btn" onclick="closeTrainerSelectModal()">✕ 닫기</button>
+</div>
 </body>
 </html>
