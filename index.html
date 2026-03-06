@@ -192,7 +192,7 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 </div>
 
 <div id="header">
-  <div id="app-title">⚡ 과장몬 GO</div>
+  <div id="app-title" onclick="triggerEasterEgg()">⚡ 과장몬 GO</div>
   <button id="qr-btn" onclick="openQR()" title="QR 스캔">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -330,8 +330,13 @@ async function bootApp() {
 //  🎮 2. 모드 선택 (포켓몬 역할을 할지 vs 참가자 역할을 할지)
 // ══════════════════════════════════════════════════════════
 function startModeSelection() {
-  // IP 매칭 확인 (안 되면 URL 파라미터 ?trainer=id 로 강제 지정 가능)
-  const matchedTrainer = TRAINERS.find(t => t.targetIp === MY_IP) || TRAINERS.find(t => t.id === URL_TRAINER_MODE);
+  // 로컬 스토리지에 저장된 보스몬 자격 확인
+  const savedBossId = localStorage.getItem('pokehunt_boss');
+  
+  // IP 매칭 확인 -> URL 파라미터 확인 -> 이스터에그 보스 확인 순으로 검사
+  const matchedTrainer = TRAINERS.find(t => t.targetIp === MY_IP) 
+                      || TRAINERS.find(t => t.id === URL_TRAINER_MODE)
+                      || (savedBossId ? TRAINERS.find(t => t.id === savedBossId) : null);
 
   // ── 포켓몬(트레이너) 모드 ──
   if (matchedTrainer) {
@@ -760,7 +765,37 @@ function toggleBroadcast() {
     startBroadcasting(); // 꺼져있으면 켜기
   }
 }
+  // ══════════════════════════════════════════════════════════
+//  🎁 10. 이스터에그 (보스몬 n7 변신 치트키)
+// ══════════════════════════════════════════════════════════
+let eggClickCount = 0;
+let eggTimer = null;
+
+function triggerEasterEgg() {
+  eggClickCount++;
   
+  // 터치하고 2초 동안 다음 터치가 없으면 카운트 초기화 (연속으로 다다닥 눌러야 함)
+  if (eggTimer) clearTimeout(eggTimer);
+  eggTimer = setTimeout(() => { eggClickCount = 0; }, 2000);
+
+  // 5번 연속 터치 성공 시!
+  if (eggClickCount >= 5) {
+    eggClickCount = 0; // 카운트 초기화
+    
+    // 스프레드시트에서 n7 데이터를 찾아옴
+    const boss = TRAINERS.find(t => t.id === 'n7');
+    
+    if (boss) {
+      alert('🎉 히든 이스터에그 발동!\n[' + boss.name + '] 모드로 접속합니다!');
+      // 이 기기에 보스몬(n7) 자격을 영구 저장
+      localStorage.setItem('pokehunt_boss', 'n7');
+      // 화면을 새로고침하여 완벽하게 보스몬으로 변신!
+      location.reload(); 
+    } else {
+      alert('⚠️ 스프레드시트에서 id가 "n7"인 보스몬 데이터를 찾을 수 없습니다.');
+    }
+  }
+}
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
