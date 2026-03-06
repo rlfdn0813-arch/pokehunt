@@ -25,7 +25,7 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
 
 /* ─── HEADER (Glassmorphism) ─── */
 #header{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:1000;border-bottom:1px solid rgba(255,255,255,0.05);}
-#app-title{font-size:20px;font-weight:800;background:linear-gradient(to right, #4facfe, #00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.5px;}
+#app-title{font-size:20px;font-weight:800;background:linear-gradient(to right, #4facfe, #00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.5px; cursor:pointer;}
 #qr-btn{width:44px;height:44px;background:linear-gradient(135deg,#f6d365,#fda085);border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(253,160,133,0.4);transition:transform .2s ease;}
 #qr-btn:active{transform:scale(.9) translateY(2px);}
 
@@ -53,54 +53,44 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
 #prox-alert{position:fixed;top:90px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;font-size:14px;z-index:2000;box-shadow:0 8px 25px rgba(239,68,68,0.5);display:none;animation:alertBounce .5s cubic-bezier(0.34,1.56,0.64,1);text-align:center;width:max-content;max-width:90vw;}
 @keyframes alertBounce{from{transform:translateX(-50%) scale(0.8);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 
-/* ─── MODALS (COMMON) ─── */
-.custom-modal{position:fixed;inset:0;background:rgba(2,6,23,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:5000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
-.custom-modal.show{display:flex;animation:fadeIn .3s ease;}
-.modal-content-box{background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:28px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+/* ─── ALL MODALS (팝업창 기본 설정) ─── */
+#qr-modal, #video-modal, #profile-modal, #image-viewer-modal, #trainer-select-modal {
+  position:fixed; inset:0; background:rgba(2,6,23,0.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); display:none; flex-direction:column; align-items:center; justify-content:center; padding:24px; z-index:5000;
+}
+#qr-modal.show, #video-modal.show, #profile-modal.show, #image-viewer-modal.show, #trainer-select-modal.show {
+  display:flex; animation:fadeIn .3s ease;
+}
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+#image-viewer-modal { z-index: 6000; }
+#trainer-select-modal { z-index: 9000; }
+
+/* ─── QR MODAL ─── */
+#qr-modal h2 { color: #38bdf8; font-size: 18px; margin-bottom: 20px; }
+#qr-reader { width: 100%; max-width:320px; border-radius: 24px; overflow: hidden; border: 2px solid #38bdf8; background: #000; box-shadow: 0 10px 30px rgba(56,189,248,0.3); position:relative;}
+.qr-scan-line { width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #38bdf8, transparent); position: absolute; z-index: 10; animation: scanLine 2.5s linear infinite; box-shadow: 0 0 15px #38bdf8; left:0; pointer-events:none;}
+@keyframes scanLine { 0% { transform: translateY(-50px); opacity: 1; } 100% { transform: translateY(300px); opacity: 0; } }
+.modal-close-btn { margin-top: 25px; background: linear-gradient(135deg, #1e293b, #334155); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 14px 40px; border-radius: 30px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 8px 16px rgba(0,0,0,0.3); transition: transform 0.2s;}
+.modal-close-btn:active { transform: scale(0.95); }
+
+/* ─── VIDEO MODAL ─── */
+#video-header { color: #fde047; font-size: 18px; font-weight: 800; margin-bottom: 16px; text-shadow: 0 0 15px rgba(253,224,71,0.5); }
+#video-player { width: 100%; max-width: 350px; border-radius: 16px; border: 2px solid rgba(253,224,71,0.5); background: #000; max-height: 40vh; }
+#trainer-info-card { display: flex; align-items: center; gap: 16px; margin-top: 16px; background: rgba(253,224,71,0.1); border: 1px solid rgba(253,224,71,0.3); border-radius: 16px; padding: 16px; width: 100%; max-width: 350px; }
+#card-emoji { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+#card-name { color: #fff; font-size: 16px; font-weight: 700; }
+#card-desc { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 4px; line-height: 1.4; }
 
 /* ─── TRAINER MODE & BUTTONS ─── */
-#trainer-mode{position:fixed;inset:0;background:#0f172a;z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
-#trainer-mode.show{display:flex;}
-#trainer-qr-box{background:#fff;border-radius:24px;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.3);margin-bottom:24px;}
-#trainer-status{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:16px;padding:12px 20px;color:#38bdf8;font-size:14px;font-weight:600;margin-bottom:30px;}
-
-/* 🔥 최신 트렌드 출퇴근 버튼 (거대하고 예쁨) */
-.commute-btn {
-  width: 100%; max-width: 320px;
-  padding: 18px 20px;
-  border-radius: 20px;
-  border: none;
-  font-size: 18px; font-weight: 800;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-bottom: 12px;
-}
-.commute-btn.off {
-  background: linear-gradient(135deg, #ef4444, #f43f5e); /* 강력한 빨강 */
-  color: white; box-shadow: 0 12px 24px rgba(239,68,68,0.4);
-}
-.commute-btn.on {
-  background: linear-gradient(135deg, #10b981, #059669); /* 산뜻한 초록 */
-  color: white; box-shadow: 0 12px 24px rgba(16,185,129,0.4);
-}
+#trainer-mode { position: fixed; inset: 0; background: #0f172a; z-index: 8000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+#trainer-mode.show { display: flex; animation:fadeIn .3s ease; }
+#trainer-qr-box { background: #fff; border-radius: 24px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); margin-bottom: 24px; }
+#trainer-status { background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 16px; padding: 12px 20px; color: #38bdf8; font-size: 14px; font-weight: 600; margin-bottom: 30px; }
+.commute-btn { width: 100%; max-width: 320px; padding: 18px 20px; border-radius: 20px; border: none; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.commute-btn.off { background: linear-gradient(135deg, #ef4444, #f43f5e); color: white; box-shadow: 0 12px 24px rgba(239,68,68,0.4); }
+.commute-btn.on { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 12px 24px rgba(16,185,129,0.4); }
 .commute-btn:active { transform: scale(0.95); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
-
-/* 돌아가기 버튼 */
-.return-btn {
-  background: transparent; color: #94a3b8; border: 1px solid #475569;
-  padding: 14px 24px; border-radius: 16px; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s; width: 100%; max-width: 320px;
-}
+.return-btn { background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 14px 24px; border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; max-width: 320px; }
 .return-btn:active { background: rgba(255,255,255,0.05); }
-
-/* ─── OTHER MODALS (QR, Video, Profile) ─── */
-#qr-reader{width:100%;border-radius:20px;overflow:hidden;border:2px solid #38bdf8;background:#000;}
-.qr-scan-line{width:100%;height:3px;background:linear-gradient(90deg,transparent,#38bdf8,transparent);position:absolute;z-index:10;animation:scanLine 2s linear infinite;box-shadow:0 0 15px #38bdf8;}
-@keyframes scanLine{0%{transform:translateY(-120px);opacity:1;}100%{transform:translateY(120px);opacity:0;}}
-.btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;padding:14px 32px;border-radius:20px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,0.4);margin-top:20px;width:100%;transition:transform .2s;}
-.btn-primary:active{transform:scale(0.95);}
 
 /* 마커 & 유저 */
 .t-marker{display:flex;flex-direction:column;align-items:center;}
@@ -112,17 +102,23 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
 @keyframes userPulse{0%{box-shadow:0 0 0 0 rgba(56,189,248,0.6)}70%{box-shadow:0 0 0 20px rgba(56,189,248,0)}100%{box-shadow:0 0 0 0 rgba(56,189,248,0)}}
 
 /* 도감(프로필) 및 이스터에그 모달 */
-#profile-list, #trainer-select-list {width:100%;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+#profile-header, #trainer-select-header { color: #fde047; font-size: 20px; font-weight: 800; margin-bottom: 20px; text-shadow: 0 0 12px rgba(253,224,71,0.5); }
+#profile-list, #trainer-select-list {width:100%; max-width:400px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:10px;}
 .profile-item, .trainer-select-item {display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:12px 16px;transition:background .2s;}
+.trainer-select-item { cursor: pointer; border-color: #f59e0b; }
+.trainer-select-item:active { background: rgba(255,255,255,0.15); }
 .profile-item img, .trainer-select-item img {width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #38bdf8;}
+.profile-item-emoji, .trainer-select-item-emoji {width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;background:rgba(255,255,255,0.1);border:2px solid #38bdf8;}
 .profile-info{display:flex;flex-direction:column;gap:4px;}
 .profile-name{font-size:16px;font-weight:700;color:#fff;}
-.profile-desc{font-size:13px;color:#94a3b8;}
+.profile-desc{font-size:12px;color:#94a3b8;line-height:1.3;}
+.reset-trainer-btn { background: #ef4444; color: white; border: none; padding: 14px; border-radius: 16px; margin-top: 10px; cursor: pointer; font-weight: bold; width: 100%; max-width: 400px; font-size: 14px; box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
 
 /* 애니메이션 & 뷰어 */
 .scan-success-anim{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10000;pointer-events:none;}
 .scan-success-anim img{width:85%;max-width:400px;object-fit:contain;border-radius:24px;box-shadow:0 20px 50px rgba(56,189,248,0.6);animation:popShrinkMove 2.5s cubic-bezier(0.34,1.56,0.64,1) forwards;}
 @keyframes popShrinkMove{0%{transform:scale(0.5) translateY(50px);opacity:0;}15%{transform:scale(1.05) translateY(0);opacity:1;}25%{transform:scale(1);opacity:1;}60%{transform:scale(1) translateY(0);opacity:1;}100%{transform:scale(0.1) translate(150vw, 150vh);opacity:0;}}
+#image-viewer-modal img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 16px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
 </style>
 </head>
 <body>
@@ -131,7 +127,7 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
   <div id="load-title">⚡ 과장몬 GO</div>
   <div id="load-sub">계양 청년회 편 : 과장님을 찾아라!</div>
   <div class="pokeball-spin"></div>
-  <div id="load-msg">서버에서 포켓몬 데이터를 불러오는 중...<br>잠시만 기다려주세요!</div>
+  <div id="load-msg">데이터를 불러오는 중...<br>잠시만 기다려주세요!</div>
 </div>
 
 <div id="header">
@@ -147,10 +143,8 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
 </div>
 
 <div id="map"></div>
-
 <div class="hud-badge" id="online-badge"><span class="hud-dot"></span>접속자 <span id="user-count">1</span>명</div>
 <div class="hud-badge" id="caught-badge">🏆 <span id="caught-count">0</span> 명 찾음</div>
-
 <div id="prox-alert">⚡ 과장님이 근처에 있습니다!</div>
 
 <div id="bottom-bar">
@@ -161,10 +155,11 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
 
 <div id="qr-modal">
   <h2>📷 QR 코드 스캔</h2>
-  <div id="qr-reader"></div>
-  <div class="qr-scan-line"></div>
-  <p id="qr-status">포켓몬(과장님)의 QR 코드를 화면에 비춰주세요</p>
-  <button id="qr-close-btn" onclick="closeQR()">✕ 닫기</button>
+  <div id="qr-reader">
+    <div class="qr-scan-line"></div>
+  </div>
+  <p id="qr-status" style="color:#94a3b8; margin-top:16px; font-size:13px;">포켓몬(과장님)의 QR 코드를 비춰주세요</p>
+  <button class="modal-close-btn" onclick="closeQR()">✕ 스캔 취소</button>
 </div>
 
 <div id="video-modal">
@@ -172,12 +167,12 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
   <video id="video-player" controls autoplay playsinline></video>
   <div id="trainer-info-card">
     <div id="card-emoji">❓</div>
-    <div>
+    <div style="flex:1;">
       <div id="card-name">과장님</div>
       <div id="card-desc">특별한 메시지</div>
     </div>
   </div>
-  <button id="video-close-btn" onclick="closeVideo()">✓ 확인</button>
+  <button class="modal-close-btn" style="background: linear-gradient(135deg,#f59e0b,#eab308); color:#000;" onclick="closeVideo()">✓ 확인 완료</button>
 </div>
 
 <div id="trainer-mode">
@@ -187,33 +182,35 @@ body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background
   <div id="trainer-qr-box">
     <canvas id="trainer-qr-img" width="220" height="220"></canvas>
   </div>
-  
   <div id="trainer-status">📍 위치 업데이트 중…</div>
   
   <button id="toggle-broadcast-btn" class="commute-btn off" onclick="toggleBroadcast()">
     <span class="btn-icon">⏸</span> 위치 송출 끄기 (퇴근하기)
   </button>
-  
-  <button class="return-btn" onclick="returnToNormalParticipant()">
-    ↩️ 일반 참가자로 돌아가기
-  </button>
+  <button class="return-btn" onclick="returnToNormalParticipant()">↩️ 일반 참가자로 돌아가기</button>
 </div>
 
 <div id="profile-modal">
-  <div id="profile-header">나의 도감 (찾은 과장님)</div>
+  <div id="profile-header">📙 나의 도감</div>
   <div id="profile-list"></div>
-  <button id="profile-close-btn" onclick="closeProfile()">✕ 닫기</button>
+  <button class="modal-close-btn" onclick="closeProfile()">✕ 닫기</button>
 </div>
 
 <div id="image-viewer-modal" onclick="closeImageViewer()">
-  <img id="viewer-img" src="" alt="과장님 이미지 전체화면">
-  <p style="color:white; margin-top:10px; font-size:12px;">(화면 아무 곳이나 클릭하여 닫기)</p>
-  <button id="viewer-close-btn">✕ 닫기</button>
+  <img id="viewer-img" src="" alt="크게 보기">
+  <p style="color:rgba(255,255,255,0.6); margin-top:15px; font-size:13px;">(화면 아무 곳이나 터치하여 닫기)</p>
+</div>
+
+<div id="trainer-select-modal">
+  <div id="trainer-select-header">비밀 메뉴: 포켓몬 할당</div>
+  <div id="trainer-select-list"></div>
+  <button class="reset-trainer-btn" onclick="clearManualTrainer()">🔄 강제 할당 해제 (일반 유저로)</button>
+  <button class="modal-close-btn" onclick="closeTrainerSelectModal()">✕ 닫기</button>
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════════
-//  ⚙️  설정 (아래 두 개의 값을 본인의 것으로 반드시 변경하세요!)
+//  ⚙️ 설정 (파이어베이스 및 스프레드시트)
 // ══════════════════════════════════════════════════════════
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPs8B0vQ1_aE9_N_1zoppXss0pWUzeTT-TuH-njPQg8ObMj6Rke6j2_0eDOuL6nJvI/exec"; 
 
@@ -234,7 +231,6 @@ let TRAINERS = [];
 const PROX_DIST = 50; 
 let map, userMarker, userLat, userLng;
 let trainerMarkers = {}, alertedIds = new Set();
-// 로컬 스토리지에서 기존 도감 기록 불러오기 (없으면 빈 상태로 시작)
 let caughtIds = new Set(JSON.parse(localStorage.getItem('pokehunt_caught') || '[]'));
 let qrScanner = null, db = null, isFirebase = false;
 let MY_IP = "";
@@ -252,35 +248,28 @@ const URL_TRAINER_MODE = urlParams.get('trainer');
 // ══════════════════════════════════════════════════════════
 async function bootApp() {
   try {
-    // 1-1. 내 기기 IP 가져오기
+    document.getElementById('caught-count').textContent = caughtIds.size; // 시작하자마자 도감 숫자 표시
+    
     document.getElementById('load-msg').innerHTML = "네트워크 상태 확인 중...<br>(Wi-Fi나 데이터를 켜주세요)";
     const ipRes = await fetch('https://api.ipify.org?format=json');
     const ipData = await ipRes.json();
     MY_IP = ipData.ip;
-    console.log("My IP:", MY_IP);
 
-    // 1-2. 구글 스프레드시트에서 포켓몬 세팅 가져오기
     document.getElementById('load-msg').innerHTML = "계양교회에서<br>포켓몬 데이터를 불러오는 중...";
     const sheetRes = await fetch(SCRIPT_URL);
     TRAINERS = await sheetRes.json();
 
-    document.getElementById('caught-count').textContent = caughtIds.size;
-    
-    // 1-3. Firebase 및 앱 시작
     initFirebase();
     startModeSelection();
-
   } catch (error) {
-    console.error("초기화 에러:", error);
     document.getElementById('load-msg').innerHTML = "⚠️ 데이터를 불러오지 못했습니다.<br>새로고침을 눌러주세요.";
   }
 }
 
 // ══════════════════════════════════════════════════════════
-//  🎮 2. 모드 선택 (포켓몬 역할을 할지 vs 참가자 역할을 할지)
+//  🎮 2. 모드 선택 (포켓몬 vs 사냥꾼)
 // ══════════════════════════════════════════════════════════
 function startModeSelection() {
-  // 로컬 스토리지에 수동으로 선택한 포켓몬 아이디가 있는지 확인
   const savedTrainerId = localStorage.getItem('pokehunt_manual_trainer');
   
   // IP 매칭 -> URL 파라미터 -> 수동 선택(이스터에그) 순으로 검사
@@ -288,29 +277,26 @@ function startModeSelection() {
                       || TRAINERS.find(t => t.id === URL_TRAINER_MODE)
                       || (savedTrainerId ? TRAINERS.find(t => t.id === savedTrainerId) : null);
 
-  // ── 포켓몬(트레이너) 모드 ──
+  // ── 포켓몬(과장님) 모드 ──
   if (matchedTrainer) {
     document.getElementById('trainer-mode').classList.add('show');
     
-    // 이미지가 있으면 이미지 출력, 없으면 이모지 출력
     const avatarHtml = matchedTrainer.imgUrl 
-      ? `<img src="${matchedTrainer.imgUrl}" style="width:45px; height:45px; border-radius:50%; object-fit:cover;">`
+      ? `<img src="${matchedTrainer.imgUrl}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #38bdf8;">`
       : `<span>${matchedTrainer.emoji}</span>`;
       
     document.getElementById('trainer-name-display').innerHTML = `${avatarHtml} <span>${matchedTrainer.name}</span>`;
     
-    // QR 코드 생성
     drawQR(document.getElementById('trainer-qr-img'), 'pokehunt:' + matchedTrainer.id);
 
-    // 내 위치를 계속 파이어베이스로 송출
-    currentTrainerId = matchedTrainer.id; // 아이디 기억해두기
-    startBroadcasting();
+    currentTrainerId = matchedTrainer.id;
+    startBroadcasting(); // 자동 출근 처리
     
     hideLoading();
     return;
   }
 
-  // ── 일반 참가자(사냥꾼) 모드 ──
+  // ── 사냥꾼 모드 ──
   if (!('geolocation' in navigator)) {
     document.getElementById('load-msg').textContent = '위치 서비스를 지원하지 않는 브라우저입니다.';
     return;
@@ -319,22 +305,15 @@ function startModeSelection() {
   document.getElementById('load-msg').textContent = '현재 위치를 찾는 중...';
   navigator.geolocation.getCurrentPosition(
     pos => {
-      userLat = pos.coords.latitude; 
-      userLng = pos.coords.longitude;
+      userLat = pos.coords.latitude; userLng = pos.coords.longitude;
       initMap(userLat, userLng);
-
-      if (isFirebase) {
-        listenTrainers();
-        listenOnline();
-      } else {
-        demoMode(userLat, userLng);
-      }
+      if (isFirebase) { listenTrainers(); listenOnline(); } 
+      else { demoMode(userLat, userLng); }
       watchLocation();
       hideLoading();
     },
     err => {
-      // 위치 거부 시 인천을 기본값으로 (에러 방지용)
-      userLat=37.4563; userLng=126.7052;
+      userLat=37.5453; userLng=126.7322; // 계양구청 부근 임시좌표
       initMap(userLat, userLng);
       if (isFirebase) { listenTrainers(); listenOnline(); }
       hideLoading();
@@ -346,22 +325,18 @@ function startModeSelection() {
 function hideLoading() {
   const ls = document.getElementById('loading-screen');
   ls.style.opacity = '0';
-  setTimeout(() => ls.style.display = 'none', 600);
+  setTimeout(() => ls.style.display = 'none', 500);
 }
 
 // ══════════════════════════════════════════════════════════
-//  🔥 3. Firebase 및 기본 유틸리티 함수
+//  🔥 3. Firebase 및 기본 유틸
 // ══════════════════════════════════════════════════════════
 function initFirebase() {
   try {
-    if (FB_CONFIG.apiKey === 'YOUR_API_KEY') throw new Error('설정 안 됨');
     firebase.initializeApp(FB_CONFIG);
     db = firebase.database();
     isFirebase = true;
-    console.log('[Firebase] connected');
-  } catch(e) {
-    console.warn('[Firebase] demo mode 작동:', e.message);
-  }
+  } catch(e) {}
 }
 function fbSet(path, val) { if (db) db.ref(path).set(val); }
 function fbOn(path, cb)   { if (db) db.ref(path).on('value', s => cb(s.val())); }
@@ -373,12 +348,12 @@ function drawQR(canvas, text) {
     script.onload = () => {
       document.getElementById('trainer-qr-box').innerHTML = '';
       const div = document.createElement('div');
-      div.style.cssText = 'width:220px;height:220px';
+      div.style.cssText = 'width:220px;height:220px;margin:0 auto;';
       document.getElementById('trainer-qr-box').appendChild(div);
       new QRCode(div, { text, width:220, height:220, colorDark:'#000', colorLight:'#fff' });
     };
     document.head.appendChild(script);
-  } catch(e) { /* fallback canvas code */ }
+  } catch(e) { }
 }
 
 function calcDist(la1,lo1,la2,lo2) {
@@ -388,7 +363,7 @@ function calcDist(la1,lo1,la2,lo2) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  🗺️ 4. 지도 및 마커 처리
+//  🗺️ 4. 지도 및 마커
 // ══════════════════════════════════════════════════════════
 function initMap(lat, lng) {
   map = L.map('map', { zoomControl:false, attributionControl:false }).setView([lat,lng], 17);
@@ -398,78 +373,61 @@ function initMap(lat, lng) {
     icon: L.divIcon({ html: `<div class="user-dot">🧑</div>`, className:'', iconSize:[46,46], iconAnchor:[23,23] })
   }).addTo(map);
 
-  L.circle([lat,lng], { radius:PROX_DIST, color:'#4fc3f7', fillColor:'#4fc3f7', fillOpacity:.06, weight:1, dashArray:'5,5' }).addTo(map);
+  L.circle([lat,lng], { radius:PROX_DIST, color:'#38bdf8', fillColor:'#38bdf8', fillOpacity:.08, weight:1, dashArray:'5,5' }).addTo(map);
 }
 
 function setTrainerMarker(t) {
   if (!t.lat || !t.lng || !map) return;
   const caught = caughtIds.has(t.id);
   
-  // 스프레드시트에 imgUrl이 있으면 이미지 태그 생성, 없으면 emoji 출력
   let avatarContent = caught ? '✅' : (t.imgUrl ? `<img src="${t.imgUrl}">` : t.emoji);
-  
-  const html = `<div class="t-marker">
-    <div class="t-avatar${caught?' caught':''}">${avatarContent}</div>
-    <div class="t-label">${t.name}</div>
-  </div>`;
+  const html = `<div class="t-marker"><div class="t-avatar${caught?' caught':''}">${avatarContent}</div><div class="t-label">${t.name}</div></div>`;
   const icon = L.divIcon({ html, className:'', iconSize:[70,60], iconAnchor:[35,55] });
   
-  if (trainerMarkers[t.id]) {
-    trainerMarkers[t.id].setLatLng([t.lat,t.lng]).setIcon(icon);
-  } else {
-    trainerMarkers[t.id] = L.marker([t.lat,t.lng], {icon}).addTo(map).on('click', () => showTrainerPopup(t));
-  }
+  if (trainerMarkers[t.id]) trainerMarkers[t.id].setLatLng([t.lat,t.lng]).setIcon(icon);
+  else trainerMarkers[t.id] = L.marker([t.lat,t.lng], {icon}).addTo(map).on('click', () => showTrainerPopup(t));
 }
 
 function showTrainerPopup(t) {
   const dist = userLat ? Math.round(calcDist(userLat,userLng,t.lat,t.lng)) : '?';
   const caught = caughtIds.has(t.id);
-  const avatarDisplay = t.imgUrl 
-    ? `<img src="${t.imgUrl}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; margin-bottom:8px;">`
-    : `<div style="font-size:34px">${t.emoji}</div>`;
+  const avatarDisplay = t.imgUrl ? `<img src="${t.imgUrl}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; margin-bottom:8px; border:2px solid #38bdf8;">` : `<div style="font-size:34px">${t.emoji}</div>`;
 
   L.popup().setLatLng([t.lat,t.lng]).setContent(`
-    <div style="text-align:center;padding:8px;min-width:150px;font-family:sans-serif">
+    <div style="text-align:center;padding:8px;min-width:150px;font-family:sans-serif;background:#fff;border-radius:8px;">
       ${avatarDisplay}
-      <div style="font-weight:700;margin:6px 0">${t.name}</div>
-      <div style="color:#666;font-size:11px">${t.desc || '설명 없음'}</div>
-      <div style="margin-top:8px;font-size:12px">📍 약 ${dist}m 거리</div>
-      ${caught ? '<div style="color:#2e7d32;font-weight:700;margin-top:6px">✅ 잡았다!</div>' : '<div style="color:#e65100;font-size:11px;margin-top:6px">📷 QR 스캔으로 잡으세요!</div>'}
+      <div style="font-weight:800;color:#0f172a;margin:6px 0">${t.name}</div>
+      <div style="color:#64748b;font-size:11px">${t.desc || '미션이 숨겨져 있습니다'}</div>
+      <div style="margin-top:8px;font-size:12px;font-weight:bold;color:#3b82f6;">📍 약 ${dist}m 거리</div>
+      ${caught ? '<div style="color:#10b981;font-weight:800;margin-top:8px">✅ 포획 완료!</div>' : '<div style="color:#ef4444;font-size:11px;font-weight:bold;margin-top:8px">📷 스캔해서 잡으세요!</div>'}
     </div>`).openOn(map);
 }
 
 // ══════════════════════════════════════════════════════════
-//  📍 5. 위치 추적 & 실시간 동기화
+//  📍 5. 위치 동기화
 // ══════════════════════════════════════════════════════════
 function onLocation(lat, lng) {
   userLat = lat; userLng = lng;
   if (userMarker) userMarker.setLatLng([lat,lng]);
   checkProximity();
 }
-
 function watchLocation() {
   if (!('geolocation' in navigator)) return;
-  navigator.geolocation.watchPosition(
-    p => onLocation(p.coords.latitude, p.coords.longitude),
-    null, { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
-  );
+  navigator.geolocation.watchPosition(p => onLocation(p.coords.latitude, p.coords.longitude), null, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
 }
-
 function listenTrainers() {
   if (!isFirebase) return;
   fbOn('/trainers', data => {
     if (!data) return;
     TRAINERS.forEach(t => {
       if (data[t.id]?.loc) {
-        t.lat = data[t.id].loc.lat;
-        t.lng = data[t.id].loc.lng;
+        t.lat = data[t.id].loc.lat; t.lng = data[t.id].loc.lng;
         setTrainerMarker(t);
         if (userLat) checkProximity();
       }
     });
   });
 }
-
 function listenOnline() {
   if (!isFirebase) return;
   const myRef = db.ref('/online/'+MY_UID);
@@ -477,7 +435,6 @@ function listenOnline() {
   myRef.onDisconnect().remove();
   fbOn('/online', d => { document.getElementById('user-count').textContent = d ? Object.keys(d).length : 1; });
 }
-
 function checkProximity() {
   if (!userLat) return;
   TRAINERS.forEach(t => {
@@ -491,14 +448,12 @@ function checkProximity() {
     }
   });
 }
-
 function showProxAlert(t, dist) {
   const el = document.getElementById('prox-alert');
-  el.innerHTML = `<strong>${t.name}</strong>이(가) 근처에 있습니다!<br>
-    <small>약 ${Math.round(dist)}m · 숨어있는 QR 코드를 스캔하세요 📷</small>`;
+  el.innerHTML = `<strong>${t.name}</strong> 발견!<br><small>약 ${Math.round(dist)}m · 카메라를 준비하세요 📷</small>`;
   el.style.display = 'block';
   if (navigator.vibrate) navigator.vibrate([200,100,200]);
-  setTimeout(() => el.style.display='none', 5500);
+  setTimeout(() => el.style.display='none', 4500);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -508,7 +463,7 @@ function openQR() {
   document.getElementById('qr-modal').classList.add('show');
   qrScanner = new Html5Qrcode('qr-reader');
   qrScanner.start({ facingMode:'environment' }, { fps:10, qrbox:{ width:240, height:240 } }, onQRSuccess, () => {}
-  ).catch(() => { document.getElementById('qr-status').textContent = '⚠️ 카메라 권한이 필요합니다.'; });
+  ).catch(() => { document.getElementById('qr-status').textContent = '⚠️ 카메라 접근 권한이 필요합니다.'; });
 }
 
 function closeQR() {
@@ -520,56 +475,37 @@ function onQRSuccess(raw) {
   closeQR();
   const tid = raw.startsWith('pokehunt:') ? raw.slice(9) : raw.trim();
   const t = TRAINERS.find(x => x.id === tid);
-  if (!t) { alert('알 수 없는 QR 코드입니다!\\n포켓몬용 QR이 맞는지 확인해주세요.'); return; }
+  if (!t) { alert('앗! 이 QR은 과장몬이 아닙니다.\n올바른 QR을 다시 찍어주세요.'); return; }
   
   caughtIds.add(t.id);
-  
-  // 로컬 스토리지에 영구 저장 (새로고침 시 유지용)
   localStorage.setItem('pokehunt_caught', JSON.stringify(Array.from(caughtIds)));
-  
-  // 우측 상단 찾은 명수 뱃지 업데이트
   document.getElementById('caught-count').textContent = caughtIds.size;
-  if (trainerMarkers[t.id]) setTrainerMarker(t); // 지도 마커 갱신
+  if (trainerMarkers[t.id]) setTrainerMarker(t); 
   
-  // Firebase 데이터 전송 (저장은 유지, 파이어베이스 데이터URL에 따라 작동)
   if (isFirebase) fbSet(`/catches/${MY_UID}/${t.id}`, { name:t.name, ts:Date.now() });
   
-  // 스캔 성공 이미지 애니메이션 실행
   if (t.imgUrl) {
     const animContainer = document.createElement('div');
     animContainer.className = 'scan-success-anim';
-    
     const animImg = document.createElement('img');
     animImg.src = t.imgUrl;
-    animImg.alt = t.name;
-    
     animContainer.appendChild(animImg);
     document.body.appendChild(animContainer);
-    
     setTimeout(() => {
       document.body.removeChild(animContainer); 
       showVideo(t); 
     }, 2500);
-    
   } else {
     showVideo(t);
   }
 }
 
 function showVideo(t) {
-  // 모달창에 이미지 or 이모지 적용
-  if (t.imgUrl) {
-    document.getElementById('card-emoji').innerHTML = `<img src="${t.imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-  } else {
-    document.getElementById('card-emoji').textContent = t.emoji;
-  }
+  if (t.imgUrl) document.getElementById('card-emoji').innerHTML = `<img src="${t.imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid #fde047;">`;
+  else document.getElementById('card-emoji').textContent = t.emoji;
   
   document.getElementById('card-name').textContent = t.name;
-  
-  // 미션 텍스트 강조 적용!
-  document.getElementById('card-desc').innerHTML = t.desc 
-    ? `<span style="color:#ffd200;">📜 미션:</span> ${t.desc}` 
-    : '축하합니다!';
+  document.getElementById('card-desc').innerHTML = t.desc ? `<span style="color:#fde047; font-weight:bold;">📜 미션:</span> ${t.desc}` : '포획을 축하합니다!';
   
   if(t.video) {
     document.getElementById('video-player').src = t.video;
@@ -586,96 +522,67 @@ function closeVideo() {
   document.getElementById('video-modal').classList.remove('show');
 }
 
-function demoMode(baseLat, baseLng) {
-  TRAINERS.forEach((t,i) => {
-    const ang = (i/10)*Math.PI*2;
-    const r = 0.0008 + Math.random()*0.0025;
-    t.lat = baseLat + Math.cos(ang)*r; t.lng = baseLng + Math.sin(ang)*r;
-    setTrainerMarker(t);
-  });
-  setInterval(() => {
-    document.getElementById('user-count').textContent = 40 + Math.floor(Math.random()*60);
-    TRAINERS.forEach(t => { t.lat += (Math.random()-.5)*0.00003; t.lng += (Math.random()-.5)*0.00003; setTrainerMarker(t); });
-    checkProximity();
-  }, 4000);
-}
-
 // ══════════════════════════════════════════════════════════
-//  📙 7. 나의 도감 기능
+//  📙 7. 도감 & 이미지 뷰어
 // ══════════════════════════════════════════════════════════
 function openProfile() {
   const listEl = document.getElementById('profile-list');
   listEl.innerHTML = ''; 
 
   if (caughtIds.size === 0) {
-    listEl.innerHTML = '<div style="color:white; text-align:center; margin-top:50px;">아직 찾은 과장님이 없습니다.<br>열심히 찾아보세요! 🏃‍♂️</div>';
+    listEl.innerHTML = '<div style="color:#94a3b8; text-align:center; margin-top:60px;">아직 찾은 과장님이 없습니다.<br><br>열심히 뛰어다녀 보세요! 🏃‍♂️</div>';
   } else {
     caughtIds.forEach(id => {
       const t = TRAINERS.find(x => x.id === id);
       if (t) {
         const avatar = t.imgUrl
-          ? `<img src="${t.imgUrl}" style="cursor:pointer;" onclick="openImageViewer('${t.imgUrl}')" title="크게 보기">`
+          ? `<img src="${t.imgUrl}" style="cursor:pointer;" onclick="openImageViewer('${t.imgUrl}')">`
           : `<div class="profile-item-emoji">${t.emoji}</div>`;
-
         listEl.innerHTML += `
           <div class="profile-item">
             ${avatar}
             <div class="profile-info">
               <div class="profile-name">${t.name}</div>
-              <div class="profile-desc">${t.desc || '발견 완료!'}</div>
+              <div class="profile-desc">${t.desc || '도감 등록 완료!'}</div>
             </div>
-          </div>
-        `;
+          </div>`;
       }
     });
   }
   document.getElementById('profile-modal').classList.add('show');
 }
 
-function closeProfile() {
-  document.getElementById('profile-modal').classList.remove('show');
-}
+function closeProfile() { document.getElementById('profile-modal').classList.remove('show'); }
 
-// ══════════════════════════════════════════════════════════
-//  🖼️ 8. 이미지 전체 화면 뷰어 기능
-// ══════════════════════════════════════════════════════════
 function openImageViewer(url) {
   if (!url) return;
-  const modal = document.getElementById('image-viewer-modal');
-  const img = document.getElementById('viewer-img');
-  img.src = url; 
-  modal.classList.add('show'); 
-  
+  document.getElementById('viewer-img').src = url; 
+  document.getElementById('image-viewer-modal').classList.add('show'); 
   if (navigator.vibrate) navigator.vibrate(50);
 }
-
 function closeImageViewer() {
-  const modal = document.getElementById('image-viewer-modal');
-  modal.classList.remove('show'); 
+  document.getElementById('image-viewer-modal').classList.remove('show'); 
   setTimeout(() => { document.getElementById('viewer-img').src = ''; }, 300);
 }
+
 // ══════════════════════════════════════════════════════════
-//  [수정] 🛑 9. 과장님 위치 송출 제어 (출퇴근 기능)
+//  🛑 8. 위치 송출 제어 (출퇴근)
 // ══════════════════════════════════════════════════════════
-let watchId = null;
-let isBroadcasting = false;
-let currentTrainerId = null;
+let watchId = null, isBroadcasting = false, currentTrainerId = null;
 
 function startBroadcasting() {
   isBroadcasting = true;
   const btn = document.getElementById('toggle-broadcast-btn');
   if(btn) {
-    btn.innerHTML = '<span class="btn-icon">⏸</span> 위치 송출 끄기 (퇴근하기)';
-    btn.className = 'commute-btn off'; // 빨간색 계열로 변경
+    btn.innerHTML = '⏸ 위치 송출 끄기 (퇴근하기)';
+    btn.className = 'commute-btn off'; 
   }
-
   watchId = navigator.geolocation.watchPosition(
     p => {
-      const lat = p.coords.latitude;
-      const lng = p.coords.longitude;
+      const lat = p.coords.latitude, lng = p.coords.longitude;
       if(isFirebase && currentTrainerId) {
         fbSet(`/trainers/${currentTrainerId}/loc`, { lat, lng, ts: Date.now() });
-        document.getElementById('trainer-status').textContent = `📍 위치 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        document.getElementById('trainer-status').textContent = `📍 위치 실시간 송출 중`;
       }
     },
     err => { document.getElementById('trainer-status').textContent = '⚠️ 위치 권한을 허용해주세요!'; }, 
@@ -685,45 +592,36 @@ function startBroadcasting() {
 
 function stopBroadcasting() {
   isBroadcasting = false;
-  
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-  }
-  
-  if (isFirebase && currentTrainerId) {
-    fbSet(`/trainers/${currentTrainerId}/loc`, null);
-  }
-  
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if (isFirebase && currentTrainerId) fbSet(`/trainers/${currentTrainerId}/loc`, null);
   document.getElementById('trainer-status').textContent = '⏸ 현재 위치 송출이 중단되었습니다.';
-  
   const btn = document.getElementById('toggle-broadcast-btn');
   if(btn) {
-    btn.innerHTML = '<span class="btn-icon">▶️</span> 위치 송출 켜기 (출근하기)';
-    btn.className = 'commute-btn on'; // 초록색 계열로 변경
+    btn.innerHTML = '▶️ 위치 송출 켜기 (출근하기)';
+    btn.className = 'commute-btn on'; 
   }
 }
 
-function toggleBroadcast() {
-  if (isBroadcasting) {
-    stopBroadcasting(); 
-  } else {
-    startBroadcasting(); 
+function toggleBroadcast() { isBroadcasting ? stopBroadcasting() : startBroadcasting(); }
+
+function returnToNormalParticipant() {
+  if(confirm('포켓몬 역할을 완전히 종료하고\n일반 참가자로 돌아가시겠습니까?')) {
+    stopBroadcasting();
+    localStorage.removeItem('pokehunt_manual_trainer');
+    window.location.href = window.location.pathname; 
   }
 }
+
 // ══════════════════════════════════════════════════════════
-//  🎁 10. 이스터에그 (포켓몬 수동 선택 치트키)
+//  🎁 9. 이스터에그 (강제 할당 치트키)
 // ══════════════════════════════════════════════════════════
-let eggClickCount = 0;
-let eggTimer = null;
+let eggClickCount = 0, eggTimer = null;
 
 function triggerEasterEgg() {
   eggClickCount++;
-  
   if (eggTimer) clearTimeout(eggTimer);
-  eggTimer = setTimeout(() => { eggClickCount = 0; }, 2000); // 2초 내에 안 누르면 초기화
+  eggTimer = setTimeout(() => { eggClickCount = 0; }, 2000); 
 
-  // 5번 연속 터치 성공 시 비밀 메뉴 팝업 열기
   if (eggClickCount >= 5) {
     eggClickCount = 0;
     openTrainerSelectModal();
@@ -733,87 +631,52 @@ function triggerEasterEgg() {
 function openTrainerSelectModal() {
   const listEl = document.getElementById('trainer-select-list');
   listEl.innerHTML = ''; 
-
-  // 스프레드시트에서 불러온 포켓몬 목록 전체를 리스트로 만들기
   TRAINERS.forEach(t => {
-    const avatar = t.imgUrl
-      ? `<img src="${t.imgUrl}">`
-      : `<div class="trainer-select-item-emoji">${t.emoji}</div>`;
-
+    const avatar = t.imgUrl ? `<img src="${t.imgUrl}">` : `<div class="trainer-select-item-emoji">${t.emoji}</div>`;
     listEl.innerHTML += `
       <div class="trainer-select-item" onclick="selectManualTrainer('${t.id}', '${t.name}')">
         ${avatar}
-        <div class="trainer-select-info">
-          <div class="trainer-select-name">${t.name}</div>
-          <div style="font-size:11px; color:rgba(255,255,255,0.6);">ID: ${t.id}</div>
+        <div class="profile-info">
+          <div class="profile-name" style="color:#fde047;">${t.name}</div>
+          <div class="profile-desc">고유 ID: ${t.id}</div>
         </div>
-      </div>
-    `;
+      </div>`;
   });
-  
   document.getElementById('trainer-select-modal').classList.add('show');
 }
 
-function closeTrainerSelectModal() {
-  document.getElementById('trainer-select-modal').classList.remove('show');
-}
+function closeTrainerSelectModal() { document.getElementById('trainer-select-modal').classList.remove('show'); }
 
-// 목록에서 포켓몬을 선택했을 때
 function selectManualTrainer(id, name) {
-  if(confirm(`이 기기를 [${name}] 포켓몬으로 설정하시겠습니까?\n(위치 송출 모드로 변환됩니다.)`)) {
-    localStorage.setItem('pokehunt_manual_trainer', id); // 내장 메모리에 영구 저장
-    location.reload(); // 새로고침해서 포켓몬 모드로 접속
+  if(confirm(`이 기기를 [${name}] 포켓몬으로 강제 지정하시겠습니까?\n(위치 송출이 즉시 시작됩니다.)`)) {
+    localStorage.setItem('pokehunt_manual_trainer', id); 
+    location.reload(); 
   }
 }
 
-// 수동 설정을 해제하고 싶을 때 (빨간색 초기화 버튼)
 function clearManualTrainer() {
   if(localStorage.getItem('pokehunt_manual_trainer')) {
-    if(confirm('포켓몬 모드를 해제하고 일반 사냥꾼(참가자)으로 돌아가시겠습니까?')) {
-      localStorage.removeItem('pokehunt_manual_trainer'); // 저장된 자격 삭제
-      location.reload(); // 새로고침해서 일반 모드로 접속
+    if(confirm('강제 할당을 해제하고 일반 유저로 돌아갈까요?')) {
+      localStorage.removeItem('pokehunt_manual_trainer');
+      location.reload();
     }
   } else {
-    alert('현재 기기에 강제로 할당된 포켓몬이 없습니다.');
+    alert('현재 강제로 할당된 내역이 없습니다.');
   }
 }
-  // ══════════════════════════════════════════════════════════
-//  [추가] 일반 참가자 강제 복귀 기능
-// ══════════════════════════════════════════════════════════
-function returnToNormalParticipant() {
-  if(confirm('포켓몬 역할을 종료하고 일반 사냥꾼(참가자)으로 돌아가시겠습니까?')) {
-    
-    // 1. 혹시 송출 중이라면 위치 송출 끄기 (에러 방지)
-    if (typeof stopBroadcasting === 'function') stopBroadcasting();
 
-    // 2. 스마트폰에 저장된 보스/수동할당 기억 완전 삭제
-    localStorage.removeItem('pokehunt_manual_trainer');
-    localStorage.removeItem('pokehunt_boss');
-    
-    // 3. 주소창 뒤에 붙은 꼬리표(?trainer=t1 등)까지 완전히 떼어내고 새로고침
-    window.location.href = window.location.pathname; 
-  }
+// 데모모드 (파이어베이스 오류시)
+function demoMode(baseLat, baseLng) {
+  TRAINERS.forEach((t,i) => {
+    const ang = (i/10)*Math.PI*2, r = 0.0008 + Math.random()*0.0025;
+    t.lat = baseLat + Math.cos(ang)*r; t.lng = baseLng + Math.sin(ang)*r;
+    setTrainerMarker(t);
+  });
 }
+
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
-<div id="header">
-  <div id="app-title" onclick="triggerEasterEgg()">⚡ 과장몬 GO</div>
-  <button id="qr-btn" onclick="openQR()" title="QR 스캔">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-      <rect x="3" y="14" width="7" height="7"/>
-      <rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/>
-      <rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/>
-    </svg>
-  </button>
-</div>
 
-<div id="trainer-select-modal">
-  <div id="trainer-select-header">비밀 메뉴: 포켓몬 할당</div>
-  <div id="trainer-select-list"></div>
-  <button class="reset-trainer-btn" onclick="clearManualTrainer()">🔄 일반 참가자로 돌아가기 (초기화)</button>
-  <button id="trainer-select-close-btn" onclick="closeTrainerSelectModal()">✕ 닫기</button>
-</div>
 </body>
 </html>
