@@ -233,7 +233,7 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 <div id="bottom-bar">
   <div class="nav-btn active"><div class="icon">🗺️</div>지도</div>
   <div id="pokeball-center" onclick="openQR()"></div>
-  <div class="nav-btn" onclick="openProfile()"><div class="icon">👤</div>프로필</div>
+  <div class="nav-btn" onclick="openProfile()"><div class="icon">📙</div>나의 도감</div>
 </div>
 
 <div id="qr-modal">
@@ -265,8 +265,10 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
   </div>
   <div id="trainer-status">📍 위치 업데이트 중…</div>
   
-  <button id="toggle-broadcast-btn" onclick="toggleBroadcast()" style="margin-top:25px; padding:14px 28px; border-radius:30px; border:none; background:#ff4444; color:white; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 4px 12px rgba(255,68,68,0.4);">⏹ 위치 송출 끄기 (퇴근용)</button>
+  <button id="toggle-broadcast-btn" onclick="toggleBroadcast()" ...>⏹ 위치 송출 끄기 (퇴근용)</button>
   <p style="color:rgba(255,255,255,0.5); font-size:11px; margin-top:10px;">퇴근하실 때는 꼭 위 버튼을 눌러주세요!</p>
+
+  <button onclick="returnToNormalParticipant()" style="margin-top:25px; padding:10px 20px; border-radius:20px; border:1px solid rgba(255,255,255,0.3); background:transparent; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer;">↩️ 일반 참가자로 돌아가기</button>
   </div>
 
 <div id="profile-modal">
@@ -671,7 +673,7 @@ function demoMode(baseLat, baseLng) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  👤 7. 프로필 (도감) 기능
+//  📙 7. 나의 도감 기능
 // ══════════════════════════════════════════════════════════
 function openProfile() {
   const listEl = document.getElementById('profile-list');
@@ -851,12 +853,36 @@ function clearManualTrainer() {
     alert('현재 기기에 강제로 할당된 포켓몬이 없습니다.');
   }
 }
+  // ══════════════════════════════════════════════════════════
+//  [추가] 일반 참가자 강제 복귀 기능
+// ══════════════════════════════════════════════════════════
+function returnToNormalParticipant() {
+  if(confirm('포켓몬 역할을 종료하고 일반 사냥꾼(참가자)으로 돌아가시겠습니까?')) {
+    
+    // 1. 혹시 송출 중이라면 위치 송출 끄기 (에러 방지)
+    if (typeof stopBroadcasting === 'function') stopBroadcasting();
+
+    // 2. 스마트폰에 저장된 보스/수동할당 기억 완전 삭제
+    localStorage.removeItem('pokehunt_manual_trainer');
+    localStorage.removeItem('pokehunt_boss');
+    
+    // 3. 주소창 뒤에 붙은 꼬리표(?trainer=t1 등)까지 완전히 떼어내고 새로고침
+    window.location.href = window.location.pathname; 
+  }
+}
 // 🚀 앱 시작
 document.addEventListener('DOMContentLoaded', bootApp);
 </script>
 <div id="header">
   <div id="app-title" onclick="triggerEasterEgg()">⚡ 과장몬 GO</div>
-  <button id="qr-btn" onclick="openQR()" title="QR 스캔"> ... </button>
+  <button id="qr-btn" onclick="openQR()" title="QR 스캔">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+      <rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/>
+      <rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/>
+    </svg>
+  </button>
 </div>
 
 <div id="trainer-select-modal">
