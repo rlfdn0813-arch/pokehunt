@@ -10,196 +10,119 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
-/* 기존 UI 스타일 완벽 유지 */
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-select:none}
-#loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
-.pokeball-spin{width:70px;height:70px;border-radius:50%;background:linear-gradient(#ff4444 50%,#fff 50%);border:5px solid #333;animation:spin 1s linear infinite;position:relative;margin:24px 0}
-.pokeball-spin::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border:5px solid #333;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
-#load-title{color:#ffd200;font-size:38px;font-weight:900;text-shadow:0 0 30px rgba(255,210,0,.8);letter-spacing:2px}
-#load-sub{color:rgba(255,255,255,.5);font-size:14px;margin-top:6px}
-#load-msg{color:rgba(255,255,255,.4);font-size:12px;margin-top:16px; text-align:center; padding: 0 20px;}
+/* ─── 최신 트렌드 UI 스타일 (Glassmorphism & Modern) ─── */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Pretendard', 'Segoe UI', sans-serif;overflow:hidden;background:#0f172a;user-select:none;color:#f8fafc;}
+
+/* ─── LOADING ─── */
+#loading-screen{position:fixed;inset:0;background:#0f172a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease;}
+.pokeball-spin{width:70px;height:70px;border-radius:50%;background:linear-gradient(#ff4b4b 50%,#fff 50%);border:4px solid #1e293b;animation:spin 1s cubic-bezier(0.5,0,0.5,1) infinite;position:relative;margin:24px 0;box-shadow:0 10px 25px rgba(0,0,0,0.5);}
+.pokeball-spin::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border:4px solid #1e293b;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);}
+#load-title{color:#fff;font-size:32px;font-weight:900;text-shadow:0 4px 20px rgba(0,242,254,0.4);letter-spacing:1px; background:linear-gradient(to right, #4facfe 0%, #00f2fe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#load-sub{color:#94a3b8;font-size:15px;margin-top:8px;font-weight:500;}
+#load-msg{color:#64748b;font-size:13px;margin-top:20px;text-align:center;line-height:1.5;padding:0 20px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-#header{position:fixed;top:0;left:0;right:0;height:58px;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.5)}
-#app-title{color:#fff;font-size:19px;font-weight:800;text-shadow:0 0 12px #4fc3f7;letter-spacing:1px}
-#qr-btn{width:42px;height:42px;background:linear-gradient(135deg,#f7971e,#ffd200);border:none;border-radius:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(255,210,0,.5);transition:transform .15s}
-#qr-btn:active{transform:scale(.93)}
-#map{position:fixed;top:58px;left:0;right:0;bottom:78px;z-index:1}
-.hud-badge{position:fixed;background:rgba(10,20,50,.88);border:1px solid rgba(79,195,247,.4);border-radius:20px;padding:5px 12px;color:#4fc3f7;font-size:12px;z-index:500;backdrop-filter:blur(8px)}
-#online-badge{top:68px;left:10px}
-#caught-badge{top:68px;right:10px}
-.hud-dot{display:inline-block;width:7px;height:7px;background:#4caf50;border-radius:50%;margin-right:4px;animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:78px;background:linear-gradient(180deg,#0f0c29,#1a1040);display:flex;align-items:center;justify-content:space-around;padding:0 20px;z-index:1000;border-top:1px solid rgba(79,195,247,.2)}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.45);font-size:10px;cursor:pointer;padding:6px 14px;border-radius:10px;transition:all .2s}
-.nav-btn.active{color:#4fc3f7;background:rgba(79,195,247,.1)}
-.nav-btn .icon{font-size:22px}
-/* 수정됨: 실제 입체적인 고화질 포켓볼 이미지로 변경 */
-/* 수정됨: 절대 지워지지 않는 위키백과 공식 고화질 포켓볼 이미지로 변경 */
-#pokeball-center {
-  width: 72px; 
-  height: 72px;
-  border-radius: 50%;
-  
-  /* 영구적인 SVG 이미지 링크 적용 */
-  background-image: url('https://upload.wikimedia.org/wikipedia/commons/5/53/Pok%C3%A9_Ball_icon.svg'); 
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent; 
-  
-  border: none; 
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.6), 0 8px 15px rgba(0, 0, 0, 0.7);
-  transition: transform .2s, box-shadow .2s;
-  margin-top: -28px; 
-  position: relative;
-  overflow: hidden; 
-  z-index: 1001; 
-}
-#pokeball-center::after {
-  content: none;
-} /* <-- 이 괄호가 빠져있었습니다! */
-#pokeball-center:active{transform:scale(.9) rotate(15deg);box-shadow:0 0 0 5px rgba(255,107,107,.6)}
-#prox-alert{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f7971e,#ffd200);color:#0f0c29;padding:11px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:2000;box-shadow:0 4px 20px rgba(255,210,0,.6);display:none;animation:alertBounce .4s ease;text-align:center;max-width:85vw}
-@keyframes alertBounce{from{transform:translateX(-50%) scale(.5);opacity:0}70%{transform:translateX(-50%) scale(1.07)}to{transform:translateX(-50%) scale(1);opacity:1}}
-#qr-modal{position:fixed;inset:0;background:rgba(5,5,15,.97);z-index:3000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-#qr-modal.show{display:flex}
-#qr-modal h2{color:#4fc3f7;font-size:17px;margin-bottom:18px;text-align:center}
-#qr-reader{width:min(300px,85vw);border-radius:16px;overflow:hidden;border:2px solid #4fc3f7;box-shadow:0 0 30px rgba(79,195,247,.3); background:#000;}
-#qr-status{color:rgba(255,255,255,.55);font-size:12px;margin-top:14px;text-align:center;max-width:260px}
-#qr-close-btn{margin-top:22px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;border:none;padding:12px 36px;border-radius:30px;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-/* 수정됨: 스캔 선이 글자를 밀어내지 않도록 수정 */
-.qr-scan-line {
-  width: min(250px, 80vw);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
-  position: absolute; 
-  z-index: 10;
-  animation: scanLine 2s linear infinite;
-}
-@keyframes scanLine {
-  0% { transform: translateY(-120px); opacity: 1; }
-  100% { transform: translateY(120px); opacity: 0; }
-}
-#video-modal{position:fixed;inset:0;background:rgba(5,5,15,.98);z-index:4000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
-#video-modal.show{display:flex}
-#video-header{color:#ffd200;font-size:15px;font-weight:800;margin-bottom:14px;text-align:center;text-shadow:0 0 12px rgba(255,210,0,.6);letter-spacing:1px}
-#video-player{width:100%;max-width:400px;border-radius:12px;border:2px solid rgba(255,210,0,.6);background:#000;max-height:55vh}
-#trainer-info-card{display:flex;align-items:center;gap:12px;margin-top:14px;background:rgba(255,210,0,.07);border:1px solid rgba(255,210,0,.25);border-radius:12px;padding:12px 16px;width:100%;max-width:400px}
-#card-emoji{font-size:36px;line-height:1; width:45px; height:45px; display:flex; align-items:center; justify-content:center;}
-#card-name{color:#fff;font-size:15px;font-weight:700}
-#card-desc{color:rgba(255,255,255,.5);font-size:11px;margin-top:3px}
-#video-close-btn{margin-top:18px;background:linear-gradient(135deg,#f7971e,#ffd200);color:#0f0c29;border:none;padding:14px 44px;border-radius:30px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,210,0,.4)}
-#trainer-mode{position:fixed;inset:0;background:linear-gradient(135deg,#0f0c29,#302b63);z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px}
-#trainer-mode.show{display:flex}
-#trainer-mode h2{color:#ffd200;font-size:20px;font-weight:800;margin-bottom:6px;text-shadow:0 0 12px rgba(255,210,0,.6)}
-#trainer-mode p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;text-align:center}
-#trainer-qr-box{background:#fff;border-radius:16px;padding:16px;box-shadow:0 0 30px rgba(79,195,247,.4)}
-#trainer-qr-img{width:220px;height:220px}
-#trainer-status{margin-top:20px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:12px;padding:12px 20px;color:#4fc3f7;font-size:13px;text-align:center}
-#trainer-name-display{color:#fff;font-size:22px;font-weight:700;margin-bottom:14px; display:flex; align-items:center; gap:10px;}
-.leaflet-container{background:#1a2035!important}
-.leaflet-tile{filter:brightness(.85) saturate(1.2) hue-rotate(10deg)}
-.t-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
-.t-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1e3c72,#2a5298);border:2.5px solid #4fc3f7;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 0 0 rgba(79,195,247,.7);animation:pulse 2.5s infinite; overflow:hidden;}
-.t-avatar img {width: 100%; height: 100%; object-fit: cover;}
-.t-avatar.caught{border-color:#4caf50;background:linear-gradient(135deg,#1b5e20,#2e7d32)}
-.t-label{background:rgba(10,20,50,.88);color:#4fc3f7;font-size:10px;padding:2px 7px;border-radius:10px;margin-top:3px;white-space:nowrap;border:1px solid rgba(79,195,247,.3)}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,195,247,.7)}70%{box-shadow:0 0 0 14px rgba(79,195,247,0)}100%{box-shadow:0 0 0 0 rgba(79,195,247,0)}}
-.user-dot{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,#64b5f6,#1565c0);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 0 0 rgba(100,181,246,.6);animation:userPulse 2s infinite}
-@keyframes userPulse{0%{box-shadow:0 0 0 0 rgba(100,181,246,.6)}70%{box-shadow:0 0 0 22px rgba(100,181,246,0)}100%{box-shadow:0 0 0 0 rgba(100,181,246,0)}}
-/* ─── PROFILE MODAL ─── */
-#profile-modal { position:fixed; inset:0; background:rgba(15,12,41,0.95); z-index:5000; display:none; flex-direction:column; align-items:center; padding:40px 20px; }
-#profile-modal.show { display:flex; }
-#profile-header { color:#ffd200; font-size:22px; font-weight:800; margin-bottom:20px; text-shadow:0 0 12px rgba(255,210,0,.6); }
-#profile-list { width:100%; max-width:400px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:20px; }
-.profile-item { display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.1); border:1px solid rgba(79,195,247,.3); border-radius:12px; padding:12px 16px; }
-.profile-item img { width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #4fc3f7; }
-.profile-item-emoji { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background:rgba(255,255,255,0.2); border:2px solid #4fc3f7; }
-.profile-info { color:#fff; display:flex; flex-direction:column; gap:4px; }
-.profile-name { font-size:16px; font-weight:bold; color:#4fc3f7; }
-.profile-desc { font-size:12px; color:rgba(255,255,255,0.7); }
-#profile-close-btn { margin-top:10px; background:linear-gradient(135deg,#1e3c72,#2a5298); color:#fff; border:none; padding:12px 40px; border-radius:30px; font-size:16px; font-weight:bold; cursor:pointer; }
-/* ─── 추가/수정 시작: QR 스캔 애니메이션 및 이미지 뷰어 CSS ─── */
-.scan-success-anim {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000; 
-  pointer-events: none; 
-}
-.scan-success-anim img {
-  width: 90%; 
-  max-width: 500px;
-  max-height: 80vh;
-  object-fit: contain;
+
+/* ─── HEADER (Glassmorphism) ─── */
+#header{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(15,23,42,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:1000;border-bottom:1px solid rgba(255,255,255,0.05);}
+#app-title{font-size:20px;font-weight:800;background:linear-gradient(to right, #4facfe, #00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.5px;}
+#qr-btn{width:44px;height:44px;background:linear-gradient(135deg,#f6d365,#fda085);border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(253,160,133,0.4);transition:transform .2s ease;}
+#qr-btn:active{transform:scale(.9) translateY(2px);}
+
+/* ─── MAP ─── */
+#map{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;}
+.leaflet-container{background:#0f172a!important;}
+.leaflet-tile{filter:brightness(0.8) saturate(1.2) contrast(1.1) hue-rotate(15deg);}
+
+/* ─── HUD BADGES (Glassmorphism) ─── */
+.hud-badge{position:fixed;background:rgba(30,41,59,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:8px 16px;color:#e2e8f0;font-size:13px;font-weight:600;z-index:500;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+#online-badge{top:80px;left:16px;}
+#caught-badge{top:80px;right:16px;color:#fde047;border-color:rgba(253,224,71,0.2);}
+.hud-dot{display:inline-block;width:8px;height:8px;background:#10b981;border-radius:50%;margin-right:6px;box-shadow:0 0 8px #10b981;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ─── BOTTOM BAR ─── */
+#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:85px;background:rgba(15,23,42,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-around;padding:0 20px 10px 20px;z-index:1000;border-top:1px solid rgba(255,255,255,0.05);}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;color:#64748b;font-size:11px;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:16px;transition:all .3s ease;}
+.nav-btn.active{color:#38bdf8;}
+.nav-btn .icon{font-size:24px;margin-bottom:2px;}
+#pokeball-center{width:76px;height:76px;border-radius:50%;background-image:url('https://upload.wikimedia.org/wikipedia/commons/5/53/Pok%C3%A9_Ball_icon.svg');background-size:cover;background-position:center;border:none;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,0.5);transition:transform .2s cubic-bezier(0.34,1.56,0.64,1);margin-top:-40px;position:relative;z-index:1001;}
+#pokeball-center:active{transform:scale(.85) rotate(15deg);}
+
+/* ─── PROXIMITY ALERT ─── */
+#prox-alert{position:fixed;top:90px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;font-size:14px;z-index:2000;box-shadow:0 8px 25px rgba(239,68,68,0.5);display:none;animation:alertBounce .5s cubic-bezier(0.34,1.56,0.64,1);text-align:center;width:max-content;max-width:90vw;}
+@keyframes alertBounce{from{transform:translateX(-50%) scale(0.8);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+
+/* ─── MODALS (COMMON) ─── */
+.custom-modal{position:fixed;inset:0;background:rgba(2,6,23,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:5000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.custom-modal.show{display:flex;animation:fadeIn .3s ease;}
+.modal-content-box{background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:28px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─── TRAINER MODE & BUTTONS ─── */
+#trainer-mode{position:fixed;inset:0;background:#0f172a;z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+#trainer-mode.show{display:flex;}
+#trainer-qr-box{background:#fff;border-radius:24px;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.3);margin-bottom:24px;}
+#trainer-status{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:16px;padding:12px 20px;color:#38bdf8;font-size:14px;font-weight:600;margin-bottom:30px;}
+
+/* 🔥 최신 트렌드 출퇴근 버튼 (거대하고 예쁨) */
+.commute-btn {
+  width: 100%; max-width: 320px;
+  padding: 18px 20px;
   border-radius: 20px;
-  box-shadow: 0 0 50px rgba(79,195,247,1); 
-  animation: popShrinkMove 2.5s ease-in-out forwards;
-}
-@keyframes popShrinkMove {
-  0% { transform: scale(0.5) translateY(50px); opacity: 0; } 
-  15% { transform: scale(1.1) translateY(0); opacity: 1; } 
-  25% { transform: scale(1); opacity: 1; } 
-  60% { transform: scale(1) translateY(0); opacity: 1; } 
-  100% { 
-    transform: scale(0.1) translate(150vw, 150vh); 
-    opacity: 0; 
-  }
-}
-#image-viewer-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(5,5,15,.98); 
-  z-index: 6000; 
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-#image-viewer-modal.show { display: flex; } 
-#image-viewer-modal img {
-  max-width: 100%;
-  max-height: 85vh;
-  object-fit: contain;
-  border-radius: 10px;
-  box-shadow: 0 0 30px rgba(255,255,255,.2);
-}
-#image-viewer-modal #viewer-close-btn {
-  margin-top: 25px;
-  background: linear-gradient(135deg,#f7971e,#ffd200); 
-  color: #0f0c29;
   border: none;
-  padding: 12px 35px;
-  border-radius: 30px;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 18px; font-weight: 800;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 12px;
 }
-  /* ─── 이스터에그: 포켓몬 수동 선택 모달 ─── */
-#trainer-select-modal {
-  position: fixed; inset: 0; background: rgba(15,12,41,0.95); z-index: 9000;
-  display: none; flex-direction: column; align-items: center; padding: 40px 20px;
+.commute-btn.off {
+  background: linear-gradient(135deg, #ef4444, #f43f5e); /* 강력한 빨강 */
+  color: white; box-shadow: 0 12px 24px rgba(239,68,68,0.4);
 }
-#trainer-select-modal.show { display: flex; }
-#trainer-select-header { color: #f7971e; font-size: 22px; font-weight: 800; margin-bottom: 20px; text-shadow: 0 0 12px rgba(247,151,30,.6); }
-#trainer-select-list {
-  width: 100%; max-width: 400px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;
+.commute-btn.on {
+  background: linear-gradient(135deg, #10b981, #059669); /* 산뜻한 초록 */
+  color: white; box-shadow: 0 12px 24px rgba(16,185,129,0.4);
 }
-.trainer-select-item {
-  display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); border: 1px solid #f7971e; border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s;
+.commute-btn:active { transform: scale(0.95); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+
+/* 돌아가기 버튼 */
+.return-btn {
+  background: transparent; color: #94a3b8; border: 1px solid #475569;
+  padding: 14px 24px; border-radius: 16px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; width: 100%; max-width: 320px;
 }
-.trainer-select-item:active { background: rgba(255,255,255,0.3); }
-.trainer-select-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd200; }
-.trainer-select-item-emoji { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; background: rgba(255,255,255,0.2); border: 2px solid #ffd200; }
-.trainer-select-info { color: #fff; display: flex; flex-direction: column; gap: 4px; }
-.trainer-select-name { font-size: 16px; font-weight: bold; color: #ffd200; }
-#trainer-select-close-btn { margin-top: 10px; background: linear-gradient(135deg,#1e3c72,#2a5298); color: #fff; border: none; padding: 12px 40px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; }
-.reset-trainer-btn { background: #ff4444; color: white; border: none; padding: 12px; border-radius: 12px; margin-top: 10px; cursor: pointer; font-weight: bold; width: 100%; max-width: 400px; font-size: 14px; box-shadow: 0 4px 12px rgba(255,68,68,0.4); }
+.return-btn:active { background: rgba(255,255,255,0.05); }
+
+/* ─── OTHER MODALS (QR, Video, Profile) ─── */
+#qr-reader{width:100%;border-radius:20px;overflow:hidden;border:2px solid #38bdf8;background:#000;}
+.qr-scan-line{width:100%;height:3px;background:linear-gradient(90deg,transparent,#38bdf8,transparent);position:absolute;z-index:10;animation:scanLine 2s linear infinite;box-shadow:0 0 15px #38bdf8;}
+@keyframes scanLine{0%{transform:translateY(-120px);opacity:1;}100%{transform:translateY(120px);opacity:0;}}
+.btn-primary{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;padding:14px 32px;border-radius:20px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,0.4);margin-top:20px;width:100%;transition:transform .2s;}
+.btn-primary:active{transform:scale(0.95);}
+
+/* 마커 & 유저 */
+.t-marker{display:flex;flex-direction:column;align-items:center;}
+.t-avatar{width:50px;height:50px;border-radius:50%;background:#1e293b;border:3px solid #38bdf8;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 0 20px rgba(56,189,248,0.5);overflow:hidden;}
+.t-avatar img{width:100%;height:100%;object-fit:cover;}
+.t-avatar.caught{border-color:#10b981;box-shadow:0 0 20px rgba(16,185,129,0.5);}
+.t-label{background:rgba(15,23,42,0.9);color:#e2e8f0;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;margin-top:6px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 4px 6px rgba(0,0,0,0.3);}
+.user-dot{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#3b82f6);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 0 0 rgba(56,189,248,0.6);animation:userPulse 2s infinite;}
+@keyframes userPulse{0%{box-shadow:0 0 0 0 rgba(56,189,248,0.6)}70%{box-shadow:0 0 0 20px rgba(56,189,248,0)}100%{box-shadow:0 0 0 0 rgba(56,189,248,0)}}
+
+/* 도감(프로필) 및 이스터에그 모달 */
+#profile-list, #trainer-select-list {width:100%;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.profile-item, .trainer-select-item {display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:12px 16px;transition:background .2s;}
+.profile-item img, .trainer-select-item img {width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #38bdf8;}
+.profile-info{display:flex;flex-direction:column;gap:4px;}
+.profile-name{font-size:16px;font-weight:700;color:#fff;}
+.profile-desc{font-size:13px;color:#94a3b8;}
+
+/* 애니메이션 & 뷰어 */
+.scan-success-anim{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10000;pointer-events:none;}
+.scan-success-anim img{width:85%;max-width:400px;object-fit:contain;border-radius:24px;box-shadow:0 20px 50px rgba(56,189,248,0.6);animation:popShrinkMove 2.5s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+@keyframes popShrinkMove{0%{transform:scale(0.5) translateY(50px);opacity:0;}15%{transform:scale(1.05) translateY(0);opacity:1;}25%{transform:scale(1);opacity:1;}60%{transform:scale(1) translateY(0);opacity:1;}100%{transform:scale(0.1) translate(150vw, 150vh);opacity:0;}}
 </style>
 </head>
 <body>
@@ -258,18 +181,23 @@ body{font-family:'Segoe UI',sans-serif;overflow:hidden;background:#0f0c29;user-s
 </div>
 
 <div id="trainer-mode">
-  <div id="trainer-name-display">과장님</div>
-  <p>트레이너(참가자)들에게 이 QR 코드를 보여주세요!</p>
+  <div id="trainer-name-display" style="font-size:24px; font-weight:800; color:#fff; margin-bottom:10px; display:flex; align-items:center; gap:12px;">과장님</div>
+  <p style="color:#94a3b8; font-size:14px; margin-bottom:24px;">사냥꾼들에게 아래 QR을 보여주세요!</p>
+  
   <div id="trainer-qr-box">
     <canvas id="trainer-qr-img" width="220" height="220"></canvas>
   </div>
+  
   <div id="trainer-status">📍 위치 업데이트 중…</div>
   
-  <button id="toggle-broadcast-btn" onclick="toggleBroadcast()" ...>⏹ 위치 송출 끄기 (퇴근용)</button>
-  <p style="color:rgba(255,255,255,0.5); font-size:11px; margin-top:10px;">퇴근하실 때는 꼭 위 버튼을 눌러주세요!</p>
-
-  <button onclick="returnToNormalParticipant()" style="margin-top:25px; padding:10px 20px; border-radius:20px; border:1px solid rgba(255,255,255,0.3); background:transparent; color:rgba(255,255,255,0.7); font-size:13px; cursor:pointer;">↩️ 일반 참가자로 돌아가기</button>
-  </div>
+  <button id="toggle-broadcast-btn" class="commute-btn off" onclick="toggleBroadcast()">
+    <span class="btn-icon">⏸</span> 위치 송출 끄기 (퇴근하기)
+  </button>
+  
+  <button class="return-btn" onclick="returnToNormalParticipant()">
+    ↩️ 일반 참가자로 돌아가기
+  </button>
+</div>
 
 <div id="profile-modal">
   <div id="profile-header">나의 도감 (찾은 과장님)</div>
@@ -727,7 +655,7 @@ function closeImageViewer() {
   setTimeout(() => { document.getElementById('viewer-img').src = ''; }, 300);
 }
 // ══════════════════════════════════════════════════════════
-//  [추가] 🛑 9. 과장님 위치 송출 제어 (출퇴근 기능)
+//  [수정] 🛑 9. 과장님 위치 송출 제어 (출퇴근 기능)
 // ══════════════════════════════════════════════════════════
 let watchId = null;
 let isBroadcasting = false;
@@ -737,9 +665,8 @@ function startBroadcasting() {
   isBroadcasting = true;
   const btn = document.getElementById('toggle-broadcast-btn');
   if(btn) {
-    btn.textContent = '⏹ 위치 송출 끄기 (퇴근용)';
-    btn.style.background = '#ff4444';
-    btn.style.boxShadow = '0 4px 12px rgba(255,68,68,0.4)';
+    btn.innerHTML = '<span class="btn-icon">⏸</span> 위치 송출 끄기 (퇴근하기)';
+    btn.className = 'commute-btn off'; // 빨간색 계열로 변경
   }
 
   watchId = navigator.geolocation.watchPosition(
@@ -748,7 +675,7 @@ function startBroadcasting() {
       const lng = p.coords.longitude;
       if(isFirebase && currentTrainerId) {
         fbSet(`/trainers/${currentTrainerId}/loc`, { lat, lng, ts: Date.now() });
-        document.getElementById('trainer-status').textContent = `📍 위치 실시간 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        document.getElementById('trainer-status').textContent = `📍 위치 송출 중 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
       }
     },
     err => { document.getElementById('trainer-status').textContent = '⚠️ 위치 권한을 허용해주세요!'; }, 
@@ -759,32 +686,29 @@ function startBroadcasting() {
 function stopBroadcasting() {
   isBroadcasting = false;
   
-  // 1. 스마트폰 GPS 추적 멈춤
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
   
-  // 2. 파이어베이스 서버에서 내 위치 데이터 즉시 삭제 (지도에서 마커 증발)
   if (isFirebase && currentTrainerId) {
     fbSet(`/trainers/${currentTrainerId}/loc`, null);
   }
   
-  // 3. 화면 UI 변경
   document.getElementById('trainer-status').textContent = '⏸ 현재 위치 송출이 중단되었습니다.';
+  
   const btn = document.getElementById('toggle-broadcast-btn');
   if(btn) {
-    btn.textContent = '▶️ 위치 송출 켜기 (출근용)';
-    btn.style.background = '#4caf50'; // 초록색으로 변경
-    btn.style.boxShadow = '0 4px 12px rgba(76,175,80,0.4)';
+    btn.innerHTML = '<span class="btn-icon">▶️</span> 위치 송출 켜기 (출근하기)';
+    btn.className = 'commute-btn on'; // 초록색 계열로 변경
   }
 }
 
 function toggleBroadcast() {
   if (isBroadcasting) {
-    stopBroadcasting(); // 켜져있으면 끄기
+    stopBroadcasting(); 
   } else {
-    startBroadcasting(); // 꺼져있으면 켜기
+    startBroadcasting(); 
   }
 }
 // ══════════════════════════════════════════════════════════
